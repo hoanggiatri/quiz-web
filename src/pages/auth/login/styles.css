@@ -1,0 +1,210 @@
+/* Login Page Styles */
+
+/* Custom animations for floating elements */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+  }
+}
+
+/* Enhanced hover effects */
+.social-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.social-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Gradient text animation */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.gradient-text {
+  background: linear-gradient(-45deg, #2563eb, #7c3aed, #2563eb, #7c3aed);
+  background-size: 400% 400%;
+  animation: gradient-shift 3s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Custom scrollbar for modal */
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Loading spinner enhancement */
+@keyframes spin-glow {
+  0% {
+    transform: rotate(0deg);
+    filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.5));
+  }
+  100% {
+    transform: rotate(360deg);
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.8));
+  }
+}
+
+.loading-spinner {
+  animation: spin-glow 1s linear infinite;
+}
+
+/* Form focus states */
+.form-input:focus-within {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #2563eb;
+}
+
+/* Stats animation */
+.stats-container {
+  transition: all 0.5s ease-in-out;
+}
+
+.stats-indicator {
+  transition: all 0.3s ease;
+}
+
+.stats-indicator.active {
+  background: linear-gradient(45deg, #2563eb, #7c3aed);
+  transform: scaleX(3);
+}
+
+/* Feature icons hover */
+.feature-icon {
+  transition: all 0.3s ease;
+}
+
+.feature-icon:hover {
+  transform: scale(1.1);
+  filter: brightness(1.1);
+}
+
+/* Mobile optimizations */
+@media (max-width: 1024px) {
+  .hero-container {
+    padding: 1rem;
+  }
+  
+  .login-form {
+    max-width: 100%;
+    margin: 0;
+  }
+  
+  .social-button {
+    height: 48px;
+    font-size: 14px;
+  }
+  
+  .form-input {
+    height: 48px;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  .gradient-bg {
+    background: linear-gradient(to bottom right, #1e293b, #0f172a, #1e1b4b);
+  }
+  
+  .card-shadow {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+  
+  .modal-content::-webkit-scrollbar-track {
+    background: #334155;
+  }
+  
+  .modal-content::-webkit-scrollbar-thumb {
+    background: #475569;
+  }
+  
+  .modal-content::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .animate-bounce,
+  .animate-pulse,
+  .gradient-text,
+  .loading-spinner {
+    animation: none;
+  }
+  
+  .social-button:hover {
+    transform: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .social-button {
+    border-width: 2px;
+    border-color: currentColor;
+  }
+  
+  .form-input {
+    border-width: 2px;
+  }
+  
+  .gradient-text {
+    background: none;
+    color: #1e40af;
+    -webkit-text-fill-color: #1e40af;
+  }
+}
+
+/* Print styles */
+@media print {
+  .login-container {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .social-button,
+  .form-input,
+  .gradient-text {
+    background: none !important;
+    color: black !important;
+    -webkit-text-fill-color: black !important;
+  }
+}

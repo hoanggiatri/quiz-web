@@ -1,0 +1,57 @@
+import React, { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
+import axios from "axios";
+
+interface Class {
+  id: string;
+  className: string;
+  teacherId: string;
+  classCode: string;
+  createdAt: string;
+  updatedAt: string;
+  actions: string;
+}
+
+interface ClassContextType {
+  classes: Class[];
+  selectedClass: Class | null;
+  setSelectedClass: (cls: Class | null) => void;
+  loading: boolean;
+}
+
+const ClassContext = createContext<ClassContextType | undefined>(undefined);
+
+export const useClassContext = () => {
+  const ctx = useContext(ClassContext);
+  if (!ctx) throw new Error("useClassContext must be used within ClassProvider");
+  return ctx;
+};
+
+interface ClassProviderProps {
+  userId: string;
+  children: ReactNode;
+}
+
+export const ClassProvider = ({ userId, children }: ClassProviderProps) => {
+  const [classes, setClasses] = useState<Class[]>([]);
+  const [selectedClass, setSelectedClass] = useState<Class | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!userId) return;
+    setLoading(true);
+    axios.get(`http://localhost:8080/classes/user/${userId}`)
+      .then(res => {
+        setClasses(res.data.data);
+        setSelectedClass(res.data.data[0] || null);
+      })
+      .catch(() => setClasses([]))
+      .finally(() => setLoading(false));
+  }, [userId]);
+
+  return (
+    <ClassContext.Provider value={{ classes, selectedClass, setSelectedClass, loading }}>
+      {children}
+    </ClassContext.Provider>
+  );
+}; 

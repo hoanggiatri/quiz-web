@@ -1,0 +1,58 @@
+/* Header styles */
+.header-container {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: background-color 0s, border-color 0s;
+  border-bottom: 1px solid hsl(var(--border) / 0.6);
+}
+
+.logo-text {
+  transition: color 0.2s ease;
+  letter-spacing: 0.5px;
+}
+
+.logo-text:hover {
+  color: hsl(var(--primary));
+}
+
+/* Navigation buttons */
+.header-container nav button {
+  font-weight: 500;
+  position: relative;
+}
+
+.header-container nav button::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background-color: hsl(var(--primary) / 0.8);
+  transition: width 0.3s ease, left 0.3s ease;
+}
+
+.header-container nav button:hover::after {
+  width: 80%;
+  left: 10%;
+}
+
+/* Action buttons */
+.header-container .flex.items-center button:last-child {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.header-container .flex.items-center button:last-child:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0.5rem 0;
+  }
+}
+
+/* Add custom animations or specific styles for the header here */

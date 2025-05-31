@@ -1,0 +1,49 @@
+/* Chart component styles */
+
+:root {
+  --chart-1: rgba(79, 70, 229, 1); /* Indigo */
+  --chart-2: rgba(16, 185, 129, 1); /* Emerald */
+  --chart-3: rgba(245, 158, 11, 1); /* Amber */
+  --chart-4: rgba(239, 68, 68, 1);  /* Red */
+  --chart-5: rgba(168, 85, 247, 1); /* Purple */
+}
+
+.dark {
+  --chart-1: rgba(165, 180, 252, 1); /* Light Indigo */
+  --chart-2: rgba(110, 231, 183, 1);  /* Light Emerald */
+  --chart-3: rgba(252, 211, 77, 1);  /* Light Amber */
+  --chart-4: rgba(252, 165, 165, 1); /* Light Red */
+  --chart-5: rgba(216, 180, 254, 1); /* Light Purple */
+}
+
+/* Animation for charts */
+@keyframes growBar {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.bar-chart-bar {
+  animation: growBar 1s ease-out;
+  transform-origin: bottom;
+}
+
+.pie-slice {
+  transition: opacity 0.3s ease;
+}
+
+.pie-slice:hover {
+  opacity: 0.8;
+}
+
+.line-chart-point {
+  transition: r 0.3s ease;
+}
+
+.line-chart-point:hover {
+  r: 5;
+} 
