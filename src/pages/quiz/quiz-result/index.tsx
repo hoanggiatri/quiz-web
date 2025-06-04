@@ -161,8 +161,15 @@ export default function QuizResultPage() {
     );
   }
 
-  const gradeInfo = getGrade(result.percentage);
-  const wrongAnswers = result.totalQuestions - result.correctAnswers;
+  // Defensive programming - ensure all required fields exist
+  const percentage = result.percentage ?? ((result.score / result.maxScore) * 100);
+  const correctAnswers = result.correctAnswers ?? 0;
+  const totalQuestions = result.totalQuestions ?? 0;
+  const timeSpent = result.timeSpent ?? 0;
+  const submittedAt = result.submittedAt ?? new Date().toISOString();
+
+  const gradeInfo = getGrade(percentage);
+  const wrongAnswers = totalQuestions - correctAnswers;
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -193,18 +200,18 @@ export default function QuizResultPage() {
                   {result.score}/{result.maxScore}
                 </div>
                 <div className="text-2xl text-muted-foreground mb-4">
-                  {result.percentage.toFixed(1)}%
+                  {percentage.toFixed(1)}%
                 </div>
-                <Progress value={result.percentage} className="h-4 max-w-md mx-auto mb-4" />
+                <Progress value={percentage} className="h-4 max-w-md mx-auto mb-4" />
                 <p className="text-lg text-muted-foreground">
-                  {getPerformanceMessage(result.percentage)}
+                  {getPerformanceMessage(percentage)}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 border rounded-lg bg-green-50 dark:bg-green-900/20">
                   <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
-                  <div className="text-2xl font-bold text-green-600">{result.correctAnswers}</div>
+                  <div className="text-2xl font-bold text-green-600">{correctAnswers}</div>
                   <div className="text-sm text-muted-foreground">Câu đúng</div>
                 </div>
 
@@ -216,7 +223,7 @@ export default function QuizResultPage() {
 
                 <div className="text-center p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
                   <Clock className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-                  <div className="text-2xl font-bold text-blue-600">{formatTime(result.timeSpent)}</div>
+                  <div className="text-2xl font-bold text-blue-600">{formatTime(timeSpent)}</div>
                   <div className="text-sm text-muted-foreground">Thời gian</div>
                 </div>
 
@@ -241,21 +248,21 @@ export default function QuizResultPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-primary mb-2">
-                    {((result.correctAnswers / result.totalQuestions) * 100).toFixed(1)}%
+                    {totalQuestions > 0 ? ((correctAnswers / totalQuestions) * 100).toFixed(1) : '0.0'}%
                   </div>
                   <div className="text-sm text-muted-foreground">Tỷ lệ chính xác</div>
                 </div>
 
                 <div className="text-center">
                   <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {Math.round(result.timeSpent / result.totalQuestions)}s
+                    {totalQuestions > 0 ? Math.round(timeSpent / totalQuestions) : 0}s
                   </div>
                   <div className="text-sm text-muted-foreground">Thời gian/câu</div>
                 </div>
 
                 <div className="text-center">
                   <div className="text-3xl font-bold text-green-600 mb-2">
-                    {result.totalQuestions}
+                    {totalQuestions}
                   </div>
                   <div className="text-sm text-muted-foreground">Tổng câu hỏi</div>
                 </div>
@@ -276,7 +283,7 @@ export default function QuizResultPage() {
                 <Calendar className="w-4 h-4 text-muted-foreground" />
                 <div>
                   <div className="font-medium">Nộp bài:</div>
-                  <div className="text-muted-foreground">{formatDate(result.submittedAt)}</div>
+                  <div className="text-muted-foreground">{formatDate(submittedAt)}</div>
                 </div>
               </div>
 
@@ -292,7 +299,7 @@ export default function QuizResultPage() {
                 <Clock className="w-4 h-4 text-muted-foreground" />
                 <div>
                   <div className="font-medium">Thời gian làm bài:</div>
-                  <div className="text-muted-foreground">{formatTime(result.timeSpent)}</div>
+                  <div className="text-muted-foreground">{formatTime(timeSpent)}</div>
                 </div>
               </div>
             </CardContent>

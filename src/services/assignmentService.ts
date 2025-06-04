@@ -7,6 +7,7 @@ export interface Assignment {
   title: string;
   file: string | null;
   createdByName: string;
+  description: string | null;
   deadline: string;
   createdAt: string;
   updatedAt: string;

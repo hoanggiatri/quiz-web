@@ -14,6 +14,7 @@ import UserProfilePage from '@/pages/user-profile';
 import AssignmentListPage from '@/pages/assignment/assignment-list';
 import AssignmentDetailPage from '@/pages/assignment/assignment-detail';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { UserProvider } from '@/contexts/UserContext';
 import './App.css';
 import { ThemeProvider } from './components/theme-provider';
 
@@ -190,12 +191,14 @@ function AppContent() {
   );
 }
 
-// App wrapper với AuthProvider
+// App wrapper với AuthProvider và UserProvider
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="edunext-theme">
       <AuthProvider>
-        <AppContent />
+        <UserProvider>
+          <AppContent />
+        </UserProvider>
       </AuthProvider>
     </ThemeProvider>
   );

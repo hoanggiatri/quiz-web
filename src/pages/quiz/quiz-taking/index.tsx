@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -19,8 +19,14 @@ import {
   EyeOff,
   X
 } from "lucide-react";
-import { quizService, type Question, type Answer } from "@/services/quizService";
+import { quizService } from "@/services/quizService";
 import { quizSubmissionService } from "@/services/quizSubmissionService";
+import type {
+  ExamUserQuizzesData,
+  ExamUserQuizzesQuestion,
+  ExamUserQuizzesAnswer
+} from "@/types/quiz";
+import type { PublicQuiz } from "@/services/quizService";
 
 // Constants
 const QUESTIONS_PER_PAGE = 10;
@@ -28,19 +34,23 @@ const QUESTIONS_PER_PAGE = 10;
 export default function QuizTakingPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const questionRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Get data from navigation state
+  const examUserQuizzesData = location.state?.examUserQuizzesData as ExamUserQuizzesData;
+  const submissionData = location.state?.submissionData;
+  const quizInfo = location.state?.quizInfo as PublicQuiz;
+
   // State management
-  const [quiz, setQuiz] = useState<any>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [questionAnswers, setQuestionAnswers] = useState<Record<string, Answer[]>>({});
+  const [quiz, setQuiz] = useState<PublicQuiz | null>(quizInfo || null);
+  const [questions, setQuestions] = useState<ExamUserQuizzesQuestion[]>(examUserQuizzesData?.questions || []);
   const [currentPage, setCurrentPage] = useState(0);
   const [userAnswers, setUserAnswers] = useState<Record<string, string[]>>({});
   const [flaggedQuestions, setFlaggedQuestions] = useState<Set<string>>(new Set());
-  const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [sessionId, setSessionId] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [loadingAnswers, setLoadingAnswers] = useState<Record<string, boolean>>({});
+  const [timeRemaining, setTimeRemaining] = useState<number>(3600); // Default 1 hour
+  const [submissionId, setSubmissionId] = useState<string>(submissionData?.submissionId || "");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -58,67 +68,37 @@ export default function QuizTakingPage() {
     questionRefs.current = [];
   }, [currentPage]);
 
-  // Load answers for questions
-  const loadAnswersForQuestions = async (questions: Question[]) => {
-    try {
-      const answersMap: Record<string, Answer[]> = {};
-
-      // Load answers for each question
-      for (const question of questions) {
-        setLoadingAnswers(prev => ({ ...prev, [question.id]: true }));
-
-        try {
-          const answerResponse = await quizService.getQuestionAnswers(question.id);
-          if (answerResponse.status === 200 && answerResponse.data) {
-            answersMap[question.id] = answerResponse.data;
-          }
-        } catch (err) {
-          console.error(`Error loading answers for question ${question.id}:`, err);
-          // Continue loading other questions even if one fails
-        } finally {
-          setLoadingAnswers(prev => ({ ...prev, [question.id]: false }));
-        }
-      }
-
-      setQuestionAnswers(answersMap);
-    } catch (err) {
-      console.error('Error loading question answers:', err);
-    }
-  };
-
   // Initialize quiz session
   useEffect(() => {
     const initializeQuiz = async () => {
-      if (!id) return;
+      // Check if we have data from navigation state
+      if (!examUserQuizzesData || !submissionData || !quizInfo) {
+        setError('Dữ liệu bài thi không hợp lệ. Vui lòng quay lại và thử lại.');
+        return;
+      }
 
       try {
         setLoading(true);
         setError(null);
 
-        // Get quiz questions
-        const quizResponse = await quizService.getQuizQuestions(id);
-        if (quizResponse.status !== 200 || !quizResponse.data) {
-          throw new Error(quizResponse.message || 'Không thể tải câu hỏi');
-        }
+        console.log('Initializing quiz with data:', {
+          examUserQuizzesId: examUserQuizzesData.examUserQuizzesId,
+          submissionId: submissionData.submissionId,
+          totalQuestions: examUserQuizzesData.questions.length
+        });
 
-        const quizData = quizResponse.data;
-        setQuiz(quizData);
+        // Set quiz data from navigation state
+        setQuiz(quizInfo);
+        setQuestions(examUserQuizzesData.questions);
+        setSubmissionId(submissionData.submissionId);
 
-        if (quizData.questions && quizData.questions.length > 0) {
-          setQuestions(quizData.questions);
+        // Calculate time remaining based on quiz end time
+        const now = new Date();
+        const endTime = new Date(quizInfo.endTime);
+        const remainingSeconds = Math.max(0, Math.floor((endTime.getTime() - now.getTime()) / 1000));
+        setTimeRemaining(remainingSeconds);
 
-          // Load answers for all questions
-          await loadAnswersForQuestions(quizData.questions);
-
-          // Start quiz session (mock for now)
-          const startResponse = await quizSubmissionService.mockStartQuiz(id);
-          if (startResponse.status === 200) {
-            setSessionId(startResponse.data.sessionId);
-            setTimeRemaining(startResponse.data.timeLimit);
-          }
-        } else {
-          throw new Error('Bài thi không có câu hỏi');
-        }
+        console.log('Quiz initialized successfully');
       } catch (err) {
         console.error('Error initializing quiz:', err);
         setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi khởi tạo bài thi');
@@ -128,7 +108,7 @@ export default function QuizTakingPage() {
     };
 
     initializeQuiz();
-  }, [id]);
+  }, [examUserQuizzesData, submissionData, quizInfo]);
 
   // Timer countdown
   useEffect(() => {
@@ -187,20 +167,42 @@ export default function QuizTakingPage() {
         newAnswers = [answerId];
       }
 
-      // Update local state
+      // Update local state first
       setUserAnswers(prev => ({
         ...prev,
         [questionId]: newAnswers
       }));
 
-      // Save to backend (mock for now)
-      await quizSubmissionService.mockSaveAnswer({
-        sessionId,
-        questionId,
-        selectedAnswers: newAnswers
-      });
+      console.log('Answer selected:', { questionId, answerId, newAnswers });
+
+      // Auto-save to backend
+      if (submissionId) {
+        try {
+          const submitData = {
+            examQuizzSubmissionId: submissionId, // Sử dụng submissionId làm examQuizzSubmissionId
+            questionId,
+            answerId: newAnswers
+          };
+
+          console.log('Auto-saving answer:', submitData);
+
+          const response = await quizService.submitSingleAnswer(submitData);
+
+          if (response.status === 200) {
+            console.log('Answer auto-saved successfully:', response);
+          } else {
+            console.warn('Auto-save failed:', response.message);
+            // Don't revert local state for auto-save failures
+          }
+        } catch (autoSaveError) {
+          console.error('Auto-save error:', autoSaveError);
+          // Don't revert local state for auto-save failures
+          // User can still continue and submit manually later
+        }
+      }
+
     } catch (err) {
-      console.error('Error saving answer:', err);
+      console.error('Error handling answer selection:', err);
       // Revert local state on error
       setUserAnswers(prev => {
         const newState = { ...prev };
@@ -235,7 +237,7 @@ export default function QuizTakingPage() {
     // Optional: Save to backend
     try {
       quizSubmissionService.toggleQuestionFlag(
-        sessionId,
+        submissionId,
         questionId,
         !flaggedQuestions.has(questionId)
       );
@@ -309,13 +311,57 @@ export default function QuizTakingPage() {
     try {
       setSubmitting(true);
 
-      // Submit quiz (mock for now)
-      const result = await quizSubmissionService.mockSubmitQuiz(sessionId);
+      console.log('Finishing submission:', {
+        submissionId,
+        totalAnsweredQuestions: Object.keys(userAnswers).length,
+        totalQuestions: questions.length
+      });
+
+      // Finish submission using the API
+      const result = await quizService.finishSubmission(submissionId);
 
       if (result.status === 200) {
+        console.log('Quiz submitted successfully:', result);
+
+        // Create QuizResult object from API response
+        const apiData = result.data;
+        const totalAnsweredQuestions = Object.keys(userAnswers).length;
+        const scorePercentage = apiData.score * 100; // API trả về score dạng decimal (0.91 = 91%)
+
+        const quizResult = {
+          submissionId,
+          examQuizzesId: quizInfo?.examQuizzesId || '',
+          userId: submissionData?.userId || '',
+          score: Math.round(scorePercentage), // Convert to percentage
+          maxScore: 100,
+          percentage: scorePercentage,
+          correctAnswers: apiData.correct,
+          totalQuestions: apiData.total,
+          timeSpent: 3600 - timeRemaining, // Calculate time spent
+          submittedAt: new Date().toISOString(),
+          gradedAt: new Date().toISOString(),
+          answers: Object.entries(userAnswers).map(([questionId, selectedAnswers]) => ({
+            questionId,
+            selectedAnswers,
+            correctAnswers: [], // Would need additional API to get correct answers
+            isCorrect: true, // Would be calculated by backend
+            points: 10 // Would come from backend
+          }))
+        };
+
+        console.log('Created quiz result:', quizResult);
+
         // Navigate to result page
-        navigate(`/quiz/quiz-result/${result.data.submissionId}`, {
-          state: { result: result.data }
+        navigate(`/quiz/quiz-result/${submissionId}`, {
+          state: {
+            result: quizResult,
+            submissionId,
+            quizInfo,
+            userAnswers,
+            totalQuestions: apiData.total,
+            totalAnsweredQuestions,
+            apiResponse: result.data // Pass original API response for debugging
+          }
         });
       } else {
         throw new Error(result.message || 'Không thể nộp bài');
@@ -393,6 +439,16 @@ export default function QuizTakingPage() {
             </div>
 
             <div className="flex items-center gap-4">
+              {/* Auto-save indicator */}
+              {saving && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                  <Clock className="w-4 h-4 text-blue-600 animate-spin" />
+                  <span className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                    Đang lưu...
+                  </span>
+                </div>
+              )}
+
               <div className={`flex items-center gap-2 px-3 py-2 rounded-lg font-mono text-lg ${getTimeColor()}`}>
                 <Clock className="w-5 h-5" />
                 <span>{formatTime(timeRemaining)}</span>
@@ -641,21 +697,9 @@ export default function QuizTakingPage() {
 
                     {/* Answer Options */}
                     <div className="space-y-3">
-                      {loadingAnswers[question.id] ? (
-                        // Loading state
-                        <div className="space-y-3">
-                          {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="flex items-center gap-3 p-4 border rounded-lg animate-pulse">
-                              <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                              <div className="flex-1">
-                                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : questionAnswers[question.id] ? (
-                        // Render answers
-                        questionAnswers[question.id].map((answer, answerIndex) => {
+                      {question.answers && question.answers.length > 0 ? (
+                        // Render answers from API data
+                        question.answers.map((answer, answerIndex) => {
                           const isSelected = userAnswers[question.id]?.includes(answer.id) || false;
                           const isMultiple = question.type === 'multipleChoice';
 

@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { PublicQuiz, Question, Answer } from "./quizService";
+import type { PublicQuiz } from "./quizService";
 
 const API_BASE_URL = "http://localhost:8080";
 
@@ -9,7 +9,7 @@ export interface QuizSession {
   userId: string;
   startTime: string;
   endTime?: string;
-  status: 'active' | 'completed' | 'expired';
+  status: "active" | "completed" | "expired";
   currentQuestionIndex: number;
   answers: Record<string, string[]>; // questionId -> selectedAnswerIds
   flaggedQuestions: string[];
@@ -92,8 +92,8 @@ class QuizSubmissionService {
         { examQuizzesId },
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.getAuthToken()}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.getAuthToken()}`,
           },
         }
       );
@@ -114,8 +114,8 @@ class QuizSubmissionService {
         request,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.getAuthToken()}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.getAuthToken()}`,
           },
         }
       );
@@ -136,8 +136,8 @@ class QuizSubmissionService {
         { sessionId },
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.getAuthToken()}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.getAuthToken()}`,
           },
         }
       );
@@ -157,7 +157,7 @@ class QuizSubmissionService {
         `${API_BASE_URL}/quiz/session/${sessionId}`,
         {
           headers: {
-            'Authorization': `Bearer ${this.getAuthToken()}`,
+            Authorization: `Bearer ${this.getAuthToken()}`,
           },
         }
       );
@@ -177,7 +177,7 @@ class QuizSubmissionService {
         `${API_BASE_URL}/quiz/result/${submissionId}`,
         {
           headers: {
-            'Authorization': `Bearer ${this.getAuthToken()}`,
+            Authorization: `Bearer ${this.getAuthToken()}`,
           },
         }
       );
@@ -191,15 +191,19 @@ class QuizSubmissionService {
   /**
    * Flag/unflag a question
    */
-  async toggleQuestionFlag(sessionId: string, questionId: string, isFlagged: boolean): Promise<void> {
+  async toggleQuestionFlag(
+    sessionId: string,
+    questionId: string,
+    isFlagged: boolean
+  ): Promise<void> {
     try {
       await axios.post(
         `${API_BASE_URL}/quiz/flag-question`,
         { sessionId, questionId, isFlagged },
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this.getAuthToken()}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${this.getAuthToken()}`,
           },
         }
       );
@@ -213,7 +217,7 @@ class QuizSubmissionService {
    * Get auth token from storage
    */
   private getAuthToken(): string | null {
-    return sessionStorage.getItem('quiz_app_access_token');
+    return sessionStorage.getItem("quiz_app_access_token");
   }
 
   /**
@@ -221,11 +225,11 @@ class QuizSubmissionService {
    */
   async mockStartQuiz(examQuizzesId: string): Promise<StartQuizResponse> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const sessionId = `session_${Date.now()}`;
     const startTime = new Date().toISOString();
-    
+
     return {
       status: 200,
       message: "Quiz started successfully",
@@ -242,29 +246,31 @@ class QuizSubmissionService {
           createdAt: startTime,
           updatedAt: startTime,
           code: "QUIZ001",
-          questions: null
+          questions: null,
         },
         timeLimit: 3600, // 1 hour
-        startTime
+        startTime,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
   /**
    * Mock save answer
    */
-  async mockSaveAnswer(request: SaveAnswerRequest): Promise<SaveAnswerResponse> {
+  async mockSaveAnswer(
+    request: SaveAnswerRequest
+  ): Promise<SaveAnswerResponse> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     return {
       status: 200,
       message: "Answer saved successfully",
       data: {
         saved: true,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     };
   }
 
@@ -273,7 +279,7 @@ class QuizSubmissionService {
    */
   async mockSubmitQuiz(sessionId: string): Promise<SubmitQuizResponse> {
     // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const score = Math.floor(Math.random() * 30) + 70; // Random score 70-100
     const totalQuestions = 10;
@@ -296,15 +302,15 @@ class QuizSubmissionService {
         selectedAnswers: [`answer_${i + 1}_1`],
         correctAnswers: [`answer_${i + 1}_1`],
         isCorrect: i < correctAnswers,
-        points: i < correctAnswers ? 10 : 0
-      }))
+        points: i < correctAnswers ? 10 : 0,
+      })),
     };
 
     return {
       status: 200,
       message: "Quiz submitted successfully",
       data: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }

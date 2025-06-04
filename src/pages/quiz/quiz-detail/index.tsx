@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -19,11 +18,13 @@ import {
   XCircle
 } from "lucide-react";
 import { quizService, type PublicQuiz } from "@/services/quizService";
+import { useUserContext } from "@/contexts/UserContext";
 import "@/styles/quiz.css";
 
 export default function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const  userId  = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 
   const [quiz, setQuiz] = useState<PublicQuiz | null>(null);
   const [loading, setLoading] = useState(true);
@@ -122,15 +123,51 @@ export default function QuizDetailPage() {
   };
 
   const handleStartQuiz = async () => {
-    if (!quiz || !isQuizAvailable()) return;
+    if (!quiz || !isQuizAvailable() || !userId) return;
 
     try {
       setStartingQuiz(true);
-      // Navigate to quiz taking page
-      navigate(`/quiz/quiz-taking/${quiz.examQuizzesId}`);
+
+      // Bước 1: Lấy bộ đề câu hỏi cho user
+      console.log('Fetching exam user quizzes...');
+      const examUserQuizzesResponse = await quizService.getExamUserQuizzes(
+        '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+        id
+      );
+
+      if (examUserQuizzesResponse.status !== 200) {
+        throw new Error(examUserQuizzesResponse.message || 'Không thể lấy bộ đề câu hỏi');
+      }
+
+      // Bước 2: Tạo submission cho user
+      console.log('Creating submission...');
+      const submissionResponse = await quizService.createSubmission(
+        '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+        id
+      );
+
+      if (submissionResponse.status !== 200) {
+        throw new Error(submissionResponse.message || 'Không thể tạo bài nộp');
+      }
+
+      console.log('Quiz started successfully:', {
+        examUserQuizzesId: examUserQuizzesResponse.data.examUserQuizzesId,
+        submissionId: submissionResponse.data, // data là string submissionId
+        totalQuestions: examUserQuizzesResponse.data.questions.length
+      });
+
+      // Navigate to quiz taking page với dữ liệu cần thiết
+      navigate(`/quiz/quiz-taking/${quiz.examQuizzesId}`, {
+        state: {
+          examUserQuizzesData: examUserQuizzesResponse.data,
+          submissionData: { submissionId: submissionResponse.data }, // Wrap trong object
+          quizInfo: quiz
+        }
+      });
+
     } catch (err) {
       console.error('Error starting quiz:', err);
-      setError('Không thể bắt đầu bài thi. Vui lòng thử lại.');
+      setError(err instanceof Error ? err.message : 'Không thể bắt đầu bài thi. Vui lòng thử lại.');
     } finally {
       setStartingQuiz(false);
     }

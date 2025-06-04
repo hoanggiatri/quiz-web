@@ -1,8 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -14,36 +16,42 @@ import {
   Users,
   Award,
   Download,
-  Play,
-  RotateCcw,
-  Eye,
+  Upload,
+  X,
   AlertTriangle,
   CheckCircle,
-  Timer,
   BookOpen,
+  Paperclip,
+  Send,
   Target
 } from "lucide-react";
 import { assignmentManagementService } from "@/services/assignmentManagementService";
-import type { Assignment, AssignmentAction } from "@/types/assignment";
+import type { Assignment } from "@/types/assignment";
 
 export default function AssignmentDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [actionLoading, setActionLoading] = useState<AssignmentAction | null>(null);
+
+  // Submission states
+  const [submissionText, setSubmissionText] = useState("");
+  const [submissionFiles, setSubmissionFiles] = useState<File[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   // Load assignment
   useEffect(() => {
     const loadAssignment = async () => {
       if (!id) return;
-      
+
       try {
         setLoading(true);
         setError(null);
-        const data = await assignmentManagementService.getAssignment(id);
+        const data = await assignmentManagementService.getAssignmentById(id);
         setAssignment(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu');
@@ -55,27 +63,46 @@ export default function AssignmentDetailPage() {
     loadAssignment();
   }, [id]);
 
-  // Handle actions
-  const handleAction = async (action: AssignmentAction) => {
+  // Handle file upload
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newFiles = Array.from(files);
+      setSubmissionFiles(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  // Remove file
+  const removeFile = (index: number) => {
+    setSubmissionFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle submission
+  const handleSubmission = async () => {
     if (!assignment) return;
-    
+
     try {
-      setActionLoading(action);
-      const result = await assignmentManagementService.performAction(action, assignment.id);
-      
-      if (result.success && result.redirectUrl) {
-        navigate(result.redirectUrl);
-      } else if (result.message) {
-        // Show success message
-        alert(result.message);
-        // Reload assignment data
-        const updatedAssignment = await assignmentManagementService.getAssignment(assignment.id);
-        setAssignment(updatedAssignment);
-      }
+      setSubmitting(true);
+
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('assignmentId', assignment.id);
+      formData.append('submissionText', submissionText);
+
+      submissionFiles.forEach((file, index) => {
+        formData.append(`files[${index}]`, file);
+      });
+
+      // TODO: Replace with actual API call
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+
+      setSubmitted(true);
+      alert('Nộp bài thành công!');
+
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra');
+      setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi nộp bài');
     } finally {
-      setActionLoading(null);
+      setSubmitting(false);
     }
   };
 
@@ -113,24 +140,6 @@ export default function AssignmentDetailPage() {
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-      case 'hard': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-    }
-  };
-
-  const getDifficultyLabel = (difficulty: string) => {
-    switch (difficulty) {
-      case 'easy': return 'Dễ';
-      case 'medium': return 'Trung bình';
-      case 'hard': return 'Khó';
-      default: return difficulty;
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('vi-VN', {
       day: '2-digit',
@@ -149,126 +158,41 @@ export default function AssignmentDetailPage() {
     return diffDays;
   };
 
-  const getActionButton = () => {
-    if (!assignment) return null;
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
-    const isLoading = actionLoading !== null;
-    
-    switch (assignment.status) {
-      case 'assigned':
-        return (
-          <Button 
-            onClick={() => handleAction('start')} 
-            disabled={isLoading}
-            className="w-full"
-          >
-            {actionLoading === 'start' ? (
-              <>
-                <Timer className="w-4 h-4 mr-2 animate-spin" />
-                Đang bắt đầu...
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 mr-2" />
-                Bắt đầu làm bài
-              </>
-            )}
-          </Button>
-        );
-      
-      case 'in_progress':
-        return (
-          <Button 
-            onClick={() => handleAction('continue')} 
-            disabled={isLoading}
-            variant="outline"
-            className="w-full"
-          >
-            {actionLoading === 'continue' ? (
-              <>
-                <Timer className="w-4 h-4 mr-2 animate-spin" />
-                Đang tải...
-              </>
-            ) : (
-              <>
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Tiếp tục làm bài
-              </>
-            )}
-          </Button>
-        );
-      
-      case 'submitted':
-      case 'graded':
-        return (
-          <div className="space-y-2">
-            <Button 
-              onClick={() => handleAction('view_result')} 
-              disabled={isLoading}
-              variant="secondary"
-              className="w-full"
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              Xem kết quả chi tiết
-            </Button>
-            {assignment.attempts < assignment.maxAttempts && (
-              <Button 
-                onClick={() => handleAction('retry')} 
-                disabled={isLoading}
-                variant="outline"
-                className="w-full"
-              >
-                {actionLoading === 'retry' ? (
-                  <>
-                    <Timer className="w-4 h-4 mr-2 animate-spin" />
-                    Đang thiết lập...
-                  </>
-                ) : (
-                  <>
-                    <RotateCcw className="w-4 h-4 mr-2" />
-                    Làm lại ({assignment.attempts}/{assignment.maxAttempts})
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-        );
-      
-      case 'overdue':
-        return (
-          <Button 
-            onClick={() => handleAction('start')} 
-            disabled={isLoading}
-            variant="destructive"
-            className="w-full"
-          >
-            {actionLoading === 'start' ? (
-              <>
-                <Timer className="w-4 h-4 mr-2 animate-spin" />
-                Đang bắt đầu...
-              </>
-            ) : (
-              <>
-                <AlertTriangle className="w-4 h-4 mr-2" />
-                Làm bài (Trễ hạn)
-              </>
-            )}
-          </Button>
-        );
-      
-      default:
-        return null;
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'medium': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+      case 'hard': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
     }
   };
 
+  const getDifficultyLabel = (difficulty: string) => {
+    switch (difficulty) {
+      case 'easy': return 'Dễ';
+      case 'medium': return 'Trung bình';
+      case 'hard': return 'Khó';
+      default: return difficulty;
+    }
+  };
+
+
+
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-32 bg-gray-200 rounded"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-4">
               <div className="h-64 bg-gray-200 rounded"></div>
               <div className="h-32 bg-gray-200 rounded"></div>
             </div>
@@ -283,7 +207,7 @@ export default function AssignmentDetailPage() {
 
   if (error || !assignment) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-6xl">
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>{error || 'Không tìm thấy bài tập'}</AlertDescription>
@@ -526,62 +450,183 @@ export default function AssignmentDetailPage() {
           )}
         </div>
 
-        {/* Sidebar */}
+        {/* Sidebar - Submission Panel */}
         <div className="space-y-6">
-          {/* Actions */}
+          {/* Submission Status */}
           <Card>
             <CardHeader>
-              <CardTitle>Hành động</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Bài làm của bạn
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {getActionButton()}
+              {submitted ? (
+                <div className="text-center py-6">
+                  <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
+                  <h3 className="font-medium text-green-600 mb-2">Đã nộp bài</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Bài làm của bạn đã được nộp thành công
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Trạng thái</span>
+                    <Badge variant="outline" className="text-orange-600">
+                      Chưa nộp
+                    </Badge>
+                  </div>
+
+                  {isOverdue && (
+                    <Alert variant="destructive">
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        Đã quá hạn nộp bài {Math.abs(daysUntilDue)} ngày
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {isUrgent && !isOverdue && (
+                    <Alert>
+                      <AlertTriangle className="h-4 w-4" />
+                      <AlertDescription>
+                        Còn {daysUntilDue} ngày để nộp bài
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Quick Stats */}
+          {/* File Submission */}
+          {!submitted && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Upload className="w-5 h-5" />
+                  Nộp bài
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Text Submission */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Ghi chú (tùy chọn)
+                  </label>
+                  <Textarea
+                    placeholder="Thêm ghi chú cho bài làm của bạn..."
+                    value={submissionText}
+                    onChange={(e) => setSubmissionText(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+
+                {/* File Upload */}
+                <div>
+                  <label className="text-sm font-medium mb-2 block">
+                    Tệp đính kèm
+                  </label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                    />
+                    <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 mb-2">
+                      Kéo thả tệp vào đây hoặc
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Chọn tệp
+                    </Button>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Hỗ trợ: PDF, DOC, DOCX, TXT, JPG, PNG (tối đa 10MB)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Uploaded Files */}
+                {submissionFiles.length > 0 && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      Tệp đã chọn ({submissionFiles.length})
+                    </label>
+                    {submissionFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 border rounded">
+                        <div className="flex items-center gap-2">
+                          <Paperclip className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm">{file.name}</span>
+                          <span className="text-xs text-gray-500">
+                            ({formatFileSize(file.size)})
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <Button
+                  onClick={handleSubmission}
+                  disabled={submitting || (submissionFiles.length === 0 && !submissionText.trim())}
+                  className="w-full"
+                >
+                  {submitting ? (
+                    <>
+                      <Upload className="w-4 h-4 mr-2 animate-pulse" />
+                      Đang nộp bài...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Nộp bài
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Assignment Info */}
           <Card>
             <CardHeader>
-              <CardTitle>Thông tin nhanh</CardTitle>
+              <CardTitle>Thông tin bài tập</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Điểm tối đa</span>
+                <span className="text-sm font-medium">{assignment.maxScore} điểm</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Hạn nộp</span>
+                <span className={`text-sm font-medium ${isOverdue ? 'text-red-600' : isUrgent ? 'text-orange-600' : ''}`}>
+                  {formatDate(assignment.dueDate)}
+                </span>
+              </div>
+
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Trạng thái</span>
                 <Badge className={getStatusColor(assignment.status)}>
                   {getStatusLabel(assignment.status)}
                 </Badge>
               </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Độ khó</span>
-                <Badge className={getDifficultyColor(assignment.difficulty)}>
-                  {getDifficultyLabel(assignment.difficulty)}
-                </Badge>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">Lần thử</span>
-                <span className="text-sm font-medium">
-                  {assignment.attempts}/{assignment.maxAttempts}
-                </span>
-              </div>
-
-              {assignment.userScore !== undefined && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Điểm hiện tại</span>
-                  <span className="text-sm font-medium text-green-600">
-                    {assignment.userScore}/{assignment.maxScore}
-                  </span>
-                </div>
-              )}
-
-              {isUrgent && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Còn lại</span>
-                  <span className="text-sm font-medium text-orange-600">
-                    {daysUntilDue} ngày
-                  </span>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>

@@ -51,6 +51,86 @@ export interface Quiz {
   questions: Question[];
 }
 
+// Types cho API exam user quizzes
+export interface ExamUserQuizzesAnswer {
+  id: string;
+  content: string;
+  questionId: string | null;
+  correct: boolean;
+}
+
+export interface ExamUserQuizzesQuestion {
+  id: string;
+  content: string;
+  type: "singleChoice" | "multipleChoice";
+  difficultyLevel: "Easy" | "Medium" | "Hard";
+  media_url: string | null;
+  createdBy: string;
+  categoryId: string;
+  answers: ExamUserQuizzesAnswer[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExamUserQuizzesData {
+  examUserQuizzesId: string;
+  questions: ExamUserQuizzesQuestion[];
+}
+
+export interface ExamUserQuizzesResponse {
+  status: number;
+  message: string;
+  data: ExamUserQuizzesData;
+  timestamp: string;
+}
+
+// Types cho submission
+export interface CreateSubmissionResponse {
+  status: number;
+  message: string;
+  data: string; // submissionId được trả về trực tiếp dưới dạng string
+  timestamp: string;
+}
+
+// Types cho user answer submission
+export interface UserAnswerSubmission {
+  questionId: string;
+  selectedAnswerIds: string[];
+  timeSpent?: number;
+}
+
+export interface SubmitAnswerRequest {
+  submissionId: string;
+  answers: UserAnswerSubmission[];
+}
+
+// Types cho API submit single answer
+export interface SubmitSingleAnswerRequest {
+  examQuizzSubmissionId: string;
+  questionId: string;
+  answerId: string[];
+}
+
+export interface SubmitSingleAnswerResponse {
+  status: number;
+  message: string;
+  data?: any;
+  timestamp: string;
+}
+
+// Types cho finish submission API
+export interface FinishSubmissionResponse {
+  status: number;
+  message: string;
+  data: {
+    correct: number;
+    score: number;
+    wrong: number;
+    total: number;
+  };
+  timestamp: string;
+}
+
 export const sampleQuiz: Quiz = {
   id: 1,
   title: "Kiểm tra giữa kỳ Đại số tuyến tính",

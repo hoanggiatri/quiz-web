@@ -16,35 +16,46 @@ import {
 } from "@/components/ui/select";
 import {
   BookOpen,
-  Calendar,
   Clock,
   FileText,
-  Filter,
   Grid3X3,
   List,
   Search,
-  SortAsc,
-  SortDesc,
   AlertTriangle,
-  CheckCircle,
   Play,
   Eye,
   RotateCcw,
   Users,
-  Award,
-  TrendingUp,
-  Target
+  Award
 } from "lucide-react";
 import { assignmentManagementService } from "@/services/assignmentManagementService";
-import type { Assignment, AssignmentSearchParams } from "@/types/assignment";
+import { useClassContext } from "@/contexts/ClassContext";
+import type { Assignment, AssignmentStatus, AssignmentType } from "@/types/assignment";
+
+// Local interface for simplified filters
+interface LocalAssignmentFilters {
+  status?: AssignmentStatus;
+  type?: AssignmentType;
+}
+
+interface LocalSearchParams {
+  query?: string;
+  filters?: LocalAssignmentFilters;
+  sortBy?: 'title' | 'dueDate' | 'assignedDate' | 'score';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
 
 export default function AssignmentListPage() {
+  const { selectedClass } = useClassContext();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [filteredAssignments, setFilteredAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  
-  const [searchParams, setSearchParams] = useState<AssignmentSearchParams>({
+
+  const [searchParams, setSearchParams] = useState<LocalSearchParams>({
     query: '',
     filters: {},
     sortBy: 'dueDate',
@@ -53,14 +64,19 @@ export default function AssignmentListPage() {
     limit: 12
   });
 
-  // Load assignments
+  // Load assignments from API
   useEffect(() => {
     const loadAssignments = async () => {
+      if (!selectedClass?.id) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
-        const response = await assignmentManagementService.getAssignments(searchParams);
-        setAssignments(response.assignments);
+        const assignmentList = await assignmentManagementService.getAssignmentsByClassId(selectedClass.id);
+        setAssignments(assignmentList);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu');
       } finally {
@@ -69,10 +85,72 @@ export default function AssignmentListPage() {
     };
 
     loadAssignments();
-  }, [searchParams]);
+  }, [selectedClass?.id]);
+
+  // Apply filters and search
+  useEffect(() => {
+    let filtered = [...assignments];
+
+    // Apply search
+    if (searchParams.query) {
+      const query = searchParams.query.toLowerCase();
+      filtered = filtered.filter(assignment =>
+        assignment.title.toLowerCase().includes(query) ||
+        assignment.description.toLowerCase().includes(query) ||
+        assignment.instructor.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply filters
+    if (searchParams.filters) {
+      const { status, type } = searchParams.filters;
+
+      if (status && typeof status === 'string') {
+        filtered = filtered.filter(a => a.status === status);
+      }
+
+      if (type && typeof type === 'string') {
+        filtered = filtered.filter(a => a.type === type);
+      }
+    }
+
+    // Apply sorting
+    if (searchParams.sortBy) {
+      filtered.sort((a, b) => {
+        let aValue: string | number | Date, bValue: string | number | Date;
+
+        switch (searchParams.sortBy) {
+          case 'title':
+            aValue = a.title;
+            bValue = b.title;
+            break;
+          case 'dueDate':
+            aValue = new Date(a.dueDate);
+            bValue = new Date(b.dueDate);
+            break;
+          case 'assignedDate':
+            aValue = new Date(a.assignedDate);
+            bValue = new Date(b.assignedDate);
+            break;
+          case 'score':
+            aValue = a.userScore || 0;
+            bValue = b.userScore || 0;
+            break;
+          default:
+            return 0;
+        }
+
+        if (aValue < bValue) return searchParams.sortOrder === 'desc' ? 1 : -1;
+        if (aValue > bValue) return searchParams.sortOrder === 'desc' ? -1 : 1;
+        return 0;
+      });
+    }
+
+    setFilteredAssignments(filtered);
+  }, [assignments, searchParams]);
 
   // Update search params
-  const updateSearchParams = (updates: Partial<AssignmentSearchParams>) => {
+  const updateSearchParams = (updates: Partial<LocalSearchParams>) => {
     setSearchParams(prev => ({
       ...prev,
       ...updates,
@@ -83,20 +161,20 @@ export default function AssignmentListPage() {
   // Statistics
   const stats = useMemo(() => {
     return {
-      total: assignments.length,
-      assigned: assignments.filter(a => a.status === 'assigned').length,
-      inProgress: assignments.filter(a => a.status === 'in_progress').length,
-      submitted: assignments.filter(a => a.status === 'submitted').length,
-      graded: assignments.filter(a => a.status === 'graded').length,
-      overdue: assignments.filter(a => a.status === 'overdue').length,
-      dueSoon: assignments.filter(a => {
+      total: filteredAssignments.length,
+      assigned: filteredAssignments.filter(a => a.status === 'assigned').length,
+      inProgress: filteredAssignments.filter(a => a.status === 'in_progress').length,
+      submitted: filteredAssignments.filter(a => a.status === 'submitted').length,
+      graded: filteredAssignments.filter(a => a.status === 'graded').length,
+      overdue: filteredAssignments.filter(a => a.status === 'overdue').length,
+      dueSoon: filteredAssignments.filter(a => {
         const dueDate = new Date(a.dueDate);
         const now = new Date();
         const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         return diffDays <= 3 && diffDays > 0;
       }).length
     };
-  }, [assignments]);
+  }, [filteredAssignments]);
 
   // Helper functions
   const getStatusColor = (status: string) => {
@@ -174,6 +252,19 @@ export default function AssignmentListPage() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
+
+  if (!selectedClass) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Alert>
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Vui lòng chọn một lớp học để xem danh sách bài tập.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
 
   if (error) {
     return (
@@ -285,12 +376,12 @@ export default function AssignmentListPage() {
 
         <div className="flex gap-2">
           <Select
-            value={searchParams.filters?.status || 'all'}
+            value={typeof searchParams.filters?.status === 'string' ? searchParams.filters.status : 'all'}
             onValueChange={(value) =>
               updateSearchParams({
                 filters: {
                   ...searchParams.filters,
-                  status: value === 'all' ? undefined : value
+                  status: value === 'all' ? undefined : value as AssignmentStatus
                 }
               })
             }
@@ -309,12 +400,12 @@ export default function AssignmentListPage() {
           </Select>
 
           <Select
-            value={searchParams.filters?.type || 'all'}
+            value={typeof searchParams.filters?.type === 'string' ? searchParams.filters.type : 'all'}
             onValueChange={(value) =>
               updateSearchParams({
                 filters: {
                   ...searchParams.filters,
-                  type: value === 'all' ? undefined : value
+                  type: value === 'all' ? undefined : value as AssignmentType
                 }
               })
             }
@@ -336,7 +427,10 @@ export default function AssignmentListPage() {
             value={`${searchParams.sortBy}-${searchParams.sortOrder}`}
             onValueChange={(value) => {
               const [sortBy, sortOrder] = value.split('-');
-              updateSearchParams({ sortBy, sortOrder: sortOrder as 'asc' | 'desc' });
+              updateSearchParams({
+                sortBy: sortBy as 'title' | 'dueDate' | 'assignedDate' | 'score',
+                sortOrder: sortOrder as 'asc' | 'desc'
+              });
             }}
           >
             <SelectTrigger className="w-48">
@@ -368,7 +462,7 @@ export default function AssignmentListPage() {
             </Card>
           ))}
         </div>
-      ) : assignments.length === 0 ? (
+      ) : filteredAssignments.length === 0 ? (
         <div className="flex flex-col items-center justify-center min-h-[400px]">
           <BookOpen className="w-16 h-16 text-muted-foreground mb-4" />
           <h2 className="text-2xl font-semibold mb-2">Chưa có bài tập nào</h2>
@@ -388,7 +482,7 @@ export default function AssignmentListPage() {
         </div>
       ) : (
         <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
-          {assignments.map((assignment) => {
+          {filteredAssignments.map((assignment) => {
             const daysUntilDue = getDaysUntilDue(assignment.dueDate);
             const isUrgent = daysUntilDue <= 3 && daysUntilDue > 0;
             const isOverdue = daysUntilDue < 0;

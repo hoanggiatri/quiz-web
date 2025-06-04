@@ -20,6 +20,7 @@ import {
   ArrowUpRight,
   Plus,
   TrendingUp} from "lucide-react";
+import UserDebugInfo from "@/components/debug/UserDebugInfo";
 import "./styles.css";
 
 export default function DashboardPage() {
