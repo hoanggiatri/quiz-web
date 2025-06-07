@@ -8,6 +8,7 @@ import type { Question, Answer } from '@/services/quizService';
 import { Badge } from "@/components/ui/badge";
 import { FileQuestion, AlertTriangle } from "lucide-react";
 import { FlagButton } from './FlagButton';
+import "./style.css";
 
 interface QuestionCardProps {
   question: Question;

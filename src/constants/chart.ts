@@ -19,8 +19,10 @@ export const CHART_DIMENSIONS = {
 };
 
 // Chart types enum
-export enum ChartType {
-  BAR = "bar",
-  PIE = "pie",
-  LINE = "line",
-}
+export const ChartType = {
+  BAR: "bar",
+  PIE: "pie",
+  LINE: "line",
+} as const;
+
+export type ChartType = (typeof ChartType)[keyof typeof ChartType];

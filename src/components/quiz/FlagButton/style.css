@@ -1,0 +1,16 @@
+/* Flag Button Styles */
+
+/* Flag Button */
+.flag-button {
+  transition: all 0.3s ease;
+}
+
+.flag-button.flagged {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.flag-button.flagged:hover {
+  background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+}

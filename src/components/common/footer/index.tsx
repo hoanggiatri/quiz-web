@@ -3,7 +3,7 @@ import "./styles.css";
 export default function Footer() {
   return (
     <footer className="border-t py-6 bg-background footer-container">
-      <div className="container mx-auto px-4">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="footer-column">
             <h3 className="text-lg font-medium mb-4">EduNext</h3>

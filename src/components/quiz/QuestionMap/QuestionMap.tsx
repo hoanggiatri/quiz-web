@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Flag, CheckCircle, Circle } from "lucide-react";
 import type { QuestionStatus } from "@/types/quiz";
+import "./style.css";
 
 interface QuestionMapProps {
   questions: QuestionStatus[];

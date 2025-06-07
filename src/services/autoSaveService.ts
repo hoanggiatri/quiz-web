@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL =
+  import.meta.env.VITE_QUIZ_BASE_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:8080";
 
 export interface AutoSaveRequest {
   examQuizId: string;
@@ -26,11 +29,14 @@ export interface AutoSaveResponse {
 }
 
 export interface AutoSaveRecoveryResponse {
-  answers: Record<string, {
-    selectedAnswers: string[];
-    isFlagged: boolean;
-    lastUpdated: string;
-  }>;
+  answers: Record<
+    string,
+    {
+      selectedAnswers: string[];
+      isFlagged: boolean;
+      lastUpdated: string;
+    }
+  >;
   session: {
     currentPage: number;
     totalAnswered: number;
@@ -47,8 +53,8 @@ export const autoSaveService = {
         data,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
           timeout: 10000, // 10 second timeout
         }
@@ -61,13 +67,16 @@ export const autoSaveService = {
   },
 
   // Recover auto-save data from server
-  recoverAutoSave: async (examQuizId: string, userId: string): Promise<AutoSaveRecoveryResponse> => {
+  recoverAutoSave: async (
+    examQuizId: string,
+    userId: string
+  ): Promise<AutoSaveRecoveryResponse> => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}/api/quiz/${examQuizId}/autosave/${userId}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
           timeout: 5000, // 5 second timeout
         }
@@ -86,7 +95,7 @@ export const autoSaveService = {
         `${API_BASE_URL}/api/quiz/${examQuizId}/autosave/${userId}`,
         {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
           },
         }
       );
@@ -94,18 +103,20 @@ export const autoSaveService = {
       console.error("Error clearing auto-save data:", error);
       // Don't throw error for cleanup operations
     }
-  }
+  },
 };
 
 // Mock service for development/testing
 export const mockAutoSaveService = {
   saveAutoSave: async (data: AutoSaveRequest): Promise<AutoSaveResponse> => {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 1000));
-    
+    await new Promise((resolve) =>
+      setTimeout(resolve, 500 + Math.random() * 1000)
+    );
+
     // Simulate occasional failures (10% chance)
     if (Math.random() < 0.1) {
-      throw new Error('Network error: Failed to save');
+      throw new Error("Network error: Failed to save");
     }
 
     // Store in localStorage for mock persistence
@@ -115,15 +126,15 @@ export const mockAutoSaveService = {
         acc[change.questionId] = {
           selectedAnswers: change.selectedAnswers,
           isFlagged: change.isFlagged,
-          lastUpdated: new Date(change.timestamp).toISOString()
+          lastUpdated: new Date(change.timestamp).toISOString(),
         };
         return acc;
       }, {} as Record<string, any>),
       session: {
         ...data.sessionData,
-        lastActivity: new Date().toISOString()
+        lastActivity: new Date().toISOString(),
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     localStorage.setItem(key, JSON.stringify(mockData));
@@ -132,38 +143,44 @@ export const mockAutoSaveService = {
       success: true,
       timestamp: Date.now(),
       saved: data.changes.length,
-      message: 'Auto-save successful'
+      message: "Auto-save successful",
     };
   },
 
-  recoverAutoSave: async (examQuizId: string, userId: string): Promise<AutoSaveRecoveryResponse> => {
+  recoverAutoSave: async (
+    examQuizId: string,
+    userId: string
+  ): Promise<AutoSaveRecoveryResponse> => {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 200 + Math.random() * 300));
+    await new Promise((resolve) =>
+      setTimeout(resolve, 200 + Math.random() * 300)
+    );
 
     const key = `mock_autosave_${examQuizId}_${userId}`;
     const saved = localStorage.getItem(key);
-    
+
     if (saved) {
       const data = JSON.parse(saved);
       return {
         answers: data.answers || {},
-        session: data.session || null
+        session: data.session || null,
       };
     }
 
     return {
       answers: {},
-      session: null
+      session: null,
     };
   },
 
   clearAutoSave: async (examQuizId: string, userId: string): Promise<void> => {
     const key = `mock_autosave_${examQuizId}_${userId}`;
     localStorage.removeItem(key);
-  }
+  },
 };
 
 // Export the service to use (switch between real and mock)
-export const currentAutoSaveService = process.env.NODE_ENV === 'development' 
-  ? mockAutoSaveService 
-  : autoSaveService;
+export const currentAutoSaveService =
+  process.env.NODE_ENV === "development"
+    ? mockAutoSaveService
+    : autoSaveService;

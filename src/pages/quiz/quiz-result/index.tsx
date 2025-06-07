@@ -2,26 +2,19 @@ import { useState, useEffect } from "react";
 import { useParams, useLocation, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Award,
-  Clock,
   CheckCircle,
   XCircle,
   ArrowLeft,
   RotateCcw,
-  AlertTriangle,
-  Calendar,
-  Target,
-  TrendingUp,
-  Download,
-  Share2
+  AlertTriangle
 } from "lucide-react";
 import { quizSubmissionService, type QuizResult } from "@/services/quizSubmissionService";
-import "@/styles/quiz.css";
+import "@/styles/quiz-shared.css";
+import "./style.css";
 
 export default function QuizResultPage() {
   const { submissionId } = useParams<{ submissionId: string }>();
@@ -63,42 +56,7 @@ export default function QuizResultPage() {
     loadResult();
   }, [submissionId, location.state]);
 
-  // Helper functions
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-
-    if (hours > 0) {
-      return `${hours} giờ ${minutes} phút`;
-    }
-    return `${minutes} phút`;
-  };
-
-  const getGrade = (percentage: number) => {
-    if (percentage >= 90) return { grade: 'A', color: 'text-green-600', bg: 'bg-green-100' };
-    if (percentage >= 80) return { grade: 'B', color: 'text-blue-600', bg: 'bg-blue-100' };
-    if (percentage >= 70) return { grade: 'C', color: 'text-yellow-600', bg: 'bg-yellow-100' };
-    if (percentage >= 60) return { grade: 'D', color: 'text-orange-600', bg: 'bg-orange-100' };
-    return { grade: 'F', color: 'text-red-600', bg: 'bg-red-100' };
-  };
-
-  const getPerformanceMessage = (percentage: number) => {
-    if (percentage >= 90) return 'Xuất sắc! Bạn đã làm bài rất tốt.';
-    if (percentage >= 80) return 'Tốt! Kết quả khá ấn tượng.';
-    if (percentage >= 70) return 'Khá tốt! Còn có thể cải thiện thêm.';
-    if (percentage >= 60) return 'Đạt yêu cầu. Hãy cố gắng hơn lần sau.';
-    return 'Cần cải thiện. Hãy ôn tập và thử lại.';
-  };
 
   // Loading state
   if (loading) {
@@ -161,173 +119,113 @@ export default function QuizResultPage() {
     );
   }
 
-  // Defensive programming - ensure all required fields exist
-  const percentage = result.percentage ?? ((result.score / result.maxScore) * 100);
+  // Calculate simple stats
   const correctAnswers = result.correctAnswers ?? 0;
   const totalQuestions = result.totalQuestions ?? 0;
-  const timeSpent = result.timeSpent ?? 0;
-  const submittedAt = result.submittedAt ?? new Date().toISOString();
-
-  const gradeInfo = getGrade(percentage);
   const wrongAnswers = totalQuestions - correctAnswers;
 
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <div className="flex items-center gap-4 mb-6">
-        <Link to="/quiz/quiz-list">
-          <Button variant="ghost" size="sm">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Quay lại danh sách
-          </Button>
-        </Link>
-      </div>
+  // Calculate score on scale of 10
+  const scoreOutOf10 = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 10) : 0;
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Result */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Result Summary */}
-          <Card>
-            <CardHeader className="text-center">
-              <CardTitle className="text-3xl">Kết quả bài thi</CardTitle>
-              <Badge variant="secondary" className="w-fit mx-auto">
-                <CheckCircle className="w-4 h-4 mr-1" />
-                Hoàn thành
-              </Badge>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center mb-8">
-                <div className="text-7xl font-bold text-primary mb-2">
-                  {result.score}/{result.maxScore}
-                </div>
-                <div className="text-2xl text-muted-foreground mb-4">
-                  {percentage.toFixed(1)}%
-                </div>
-                <Progress value={percentage} className="h-4 max-w-md mx-auto mb-4" />
-                <p className="text-lg text-muted-foreground">
-                  {getPerformanceMessage(percentage)}
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:via-green-900 dark:to-emerald-900">
+      {/* Enhanced Header */}
+      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm">
+        <div className="container mx-auto px-6 py-6 max-w-7xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link to="/quiz/quiz-list">
+                <Button variant="ghost" size="sm" className="hover:bg-green-50 dark:hover:bg-green-900/20">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Quay lại danh sách
+                </Button>
+              </Link>
+              <div className="h-6 w-px bg-gray-300 dark:bg-gray-600"></div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  Kết quả bài thi
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300 text-sm">
+                  Xem chi tiết kết quả và phân tích
                 </p>
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 border rounded-lg bg-green-50 dark:bg-green-900/20">
-                  <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500" />
-                  <div className="text-2xl font-bold text-green-600">{correctAnswers}</div>
-                  <div className="text-sm text-muted-foreground">Câu đúng</div>
-                </div>
 
-                <div className="text-center p-4 border rounded-lg bg-red-50 dark:bg-red-900/20">
-                  <XCircle className="w-8 h-8 mx-auto mb-2 text-red-500" />
-                  <div className="text-2xl font-bold text-red-600">{wrongAnswers}</div>
-                  <div className="text-sm text-muted-foreground">Câu sai</div>
-                </div>
-
-                <div className="text-center p-4 border rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                  <Clock className="w-8 h-8 mx-auto mb-2 text-blue-500" />
-                  <div className="text-2xl font-bold text-blue-600">{formatTime(timeSpent)}</div>
-                  <div className="text-sm text-muted-foreground">Thời gian</div>
-                </div>
-
-                <div className={`text-center p-4 border rounded-lg ${gradeInfo.bg}`}>
-                  <Award className={`w-8 h-8 mx-auto mb-2 ${gradeInfo.color}`} />
-                  <div className={`text-2xl font-bold ${gradeInfo.color}`}>{gradeInfo.grade}</div>
-                  <div className="text-sm text-muted-foreground">Xếp loại</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Detailed Analysis */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5" />
-                Phân tích chi tiết
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary mb-2">
-                    {totalQuestions > 0 ? ((correctAnswers / totalQuestions) * 100).toFixed(1) : '0.0'}%
-                  </div>
-                  <div className="text-sm text-muted-foreground">Tỷ lệ chính xác</div>
-                </div>
-
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {totalQuestions > 0 ? Math.round(timeSpent / totalQuestions) : 0}s
-                  </div>
-                  <div className="text-sm text-muted-foreground">Thời gian/câu</div>
-                </div>
-
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">
-                    {totalQuestions}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Tổng câu hỏi</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          </div>
         </div>
+      </div>
 
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Quick Info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Thông tin bài thi</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-2 text-sm">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <div className="font-medium">Nộp bài:</div>
-                  <div className="text-muted-foreground">{formatDate(submittedAt)}</div>
+      {/* Main Content */}
+      <div className="container mx-auto px-6 py-8 max-w-4xl">
+        {/* Simple Result Card */}
+        <Card className="shadow-xl border-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full mb-4 mx-auto">
+              <Award className="w-8 h-8 text-green-600" />
+            </div>
+            <CardTitle className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              Kết quả bài thi
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="px-8 pb-8">
+            {/* Score Display */}
+            <div className="text-center mb-8">
+              <div className="text-6xl font-bold text-green-600 mb-2">
+                {scoreOutOf10}/10
+              </div>
+              <p className="text-lg text-gray-600 dark:text-gray-400">
+                Điểm số
+              </p>
+            </div>
+
+            {/* Simple Stats Grid */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* Correct Answers */}
+              <div className="text-center p-6 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500 rounded-lg mb-3">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-3xl font-bold text-green-600 mb-1">
+                  {correctAnswers}
+                </div>
+                <div className="text-sm text-green-700 dark:text-green-300 font-medium">
+                  Câu đúng
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-sm">
-                <Target className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <div className="font-medium">Điểm đạt được:</div>
-                  <div className="text-muted-foreground">{result.score}/{result.maxScore}</div>
+              {/* Wrong Answers */}
+              <div className="text-center p-6 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                <div className="inline-flex items-center justify-center w-12 h-12 bg-red-500 rounded-lg mb-3">
+                  <XCircle className="w-6 h-6 text-white" />
+                </div>
+                <div className="text-3xl font-bold text-red-600 mb-1">
+                  {wrongAnswers}
+                </div>
+                <div className="text-sm text-red-700 dark:text-red-300 font-medium">
+                  Câu sai
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-4 h-4 text-muted-foreground" />
-                <div>
-                  <div className="font-medium">Thời gian làm bài:</div>
-                  <div className="text-muted-foreground">{formatTime(timeSpent)}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          {/* Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Hành động</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button variant="outline" className="w-full">
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 mt-8">
+              <Link to="/quiz/quiz-list" className="flex-1">
+                <Button variant="outline" className="w-full">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Quay lại danh sách
+                </Button>
+              </Link>
+
+              <Button variant="outline" className="flex-1">
                 <RotateCcw className="w-4 h-4 mr-2" />
                 Làm lại bài thi
               </Button>
-
-              <Button variant="outline" className="w-full">
-                <Download className="w-4 h-4 mr-2" />
-                Tải kết quả
-              </Button>
-
-              <Button variant="outline" className="w-full">
-                <Share2 className="w-4 h-4 mr-2" />
-                Chia sẻ kết quả
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

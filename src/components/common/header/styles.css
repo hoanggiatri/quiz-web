@@ -1,58 +1,107 @@
-/* Header styles */
+/* Enhanced Header styles */
 .header-container {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: background-color 0s, border-color 0s;
-  border-bottom: 1px solid hsl(var(--border) / 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.3s ease;
 }
 
+/* Logo animations */
 .logo-text {
-  transition: color 0.2s ease;
+  transition: all 0.3s ease;
   letter-spacing: 0.5px;
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
 }
 
-.logo-text:hover {
-  color: hsl(var(--primary));
-}
-
-/* Navigation buttons */
-.header-container nav button {
-  font-weight: 500;
-  position: relative;
-}
-
-.header-container nav button::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background-color: hsl(var(--primary) / 0.8);
-  transition: width 0.3s ease, left 0.3s ease;
-}
-
-.header-container nav button:hover::after {
-  width: 80%;
-  left: 10%;
-}
-
-/* Action buttons */
-.header-container .flex.items-center button:last-child {
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.header-container .flex.items-center button:last-child:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-  .header-container {
-    padding: 0.5rem 0;
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
   }
 }
 
-/* Add custom animations or specific styles for the header here */
+/* Navigation button enhancements */
+.header-container nav button {
+  position: relative;
+  overflow: hidden;
+}
+
+.header-container nav button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.header-container nav button:hover::before {
+  left: 100%;
+}
+
+/* Enhanced notification badge */
+.header-container .relative span {
+  animation: pulse-notification 2s infinite;
+}
+
+@keyframes pulse-notification {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Smooth hover transitions */
+.header-container button {
+  transition: all 0.2s ease;
+}
+
+.header-container button:hover {
+  transform: translateY(-1px);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0.75rem 0;
+  }
+
+  .logo-text {
+    font-size: 1.5rem;
+  }
+}
+
+/* Dark mode specific enhancements */
+@media (prefers-color-scheme: dark) {
+  .header-container {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Focus states for accessibility */
+.header-container button:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 2px;
+}
+
+/* Dropdown menu enhancements */
+.header-container [data-radix-popper-content-wrapper] {
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

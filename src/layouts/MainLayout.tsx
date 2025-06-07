@@ -16,7 +16,7 @@ export default function MainLayout({ children, onLogout, userId }: MainLayoutPro
     <ClassProvider userId={demoUserId}>
       <div className="min-h-screen flex flex-col bg-background">
         <Header onLogout={onLogout} />
-        <main className="flex-1 container mx-auto px-4 py-6">
+        <main className="flex-1 w-full">
           {children}
         </main>
         <Footer />

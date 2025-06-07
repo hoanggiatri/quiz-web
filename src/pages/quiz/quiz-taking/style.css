@@ -1,0 +1,118 @@
+/* Quiz Taking Page Styles - Shadcn UI Compatible */
+
+/* CSS Variables for layout */
+:root {
+  --header-height: 4rem; /* 64px - adjust this if header height changes */
+  /*
+   * Common header heights:
+   * - 3.5rem (56px) - Compact header
+   * - 4rem (64px) - Standard header (current)
+   * - 5rem (80px) - Large header
+   * - 6rem (96px) - Extra large header
+   */
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Question highlight animation */
+.question-highlight {
+  animation: highlightPulse 2s ease-in-out;
+}
+
+@keyframes highlightPulse {
+  0% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px hsl(var(--primary) / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0);
+  }
+}
+
+/* Enhanced hover effects for answer options */
+.answer-option:hover {
+  background-color: hsl(var(--muted) / 0.8);
+  border-color: hsl(var(--border));
+}
+
+.answer-option.selected {
+  background-color: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary));
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus states for accessibility */
+.question-map-button:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+
+/* Loading animation for submit button */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Sticky sidebar enhancements */
+.sticky-sidebar {
+  position: sticky;
+  top: var(--header-height);
+  height: calc(100vh - var(--header-height));
+  overflow-y: auto;
+  z-index: 10;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.sticky-sidebar:hover {
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Dark mode shadow */
+@media (prefers-color-scheme: dark) {
+  .sticky-sidebar {
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  }
+
+  .sticky-sidebar:hover {
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Ensure smooth scrolling in sidebar */
+.sticky-sidebar .scroll-area {
+  height: 100%;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .question-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+  }
+
+  .question-map-button {
+    height: 2.5rem;
+    width: 2.5rem;
+    font-size: 0.875rem;
+  }
+}

@@ -251,7 +251,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <div className="text-center mt-6">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Chưa có tài khoản?{" "}
-                  <a href="#" className="text-primary hover:underline font-medium">
+                  <a href="/register" className="text-primary hover:underline font-medium">
                     Đăng ký ngay
                   </a>
                 </p>

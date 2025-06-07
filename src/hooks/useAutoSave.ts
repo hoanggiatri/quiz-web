@@ -52,7 +52,7 @@ export const useAutoSave = ({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const abortControllerRef = useRef<AbortController>();
+  const abortControllerRef = useRef<AbortController | null>(null);
   const retryCountRef = useRef(0);
   const sessionDataRef = useRef<SessionData>({
     currentPage: 1,

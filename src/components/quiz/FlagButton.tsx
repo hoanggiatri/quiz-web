@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Flag } from "lucide-react";
 import { cn } from "@/lib/utils";
+import "./style.css";
 
 interface FlagButtonProps {
   isFlagged: boolean;

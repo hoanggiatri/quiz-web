@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback } from "react";
 
 interface UseQuestionTrackerOptions {
   questions: { id: string }[];
@@ -11,44 +11,55 @@ export const useQuestionTracker = ({
   questions,
   currentQuestionIndex,
   onQuestionChange,
-  enabled = true
+  enabled = true,
 }: UseQuestionTrackerOptions) => {
   const observerRef = useRef<IntersectionObserver | null>(null);
   const isScrollingRef = useRef(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Scroll to a specific question
-  const scrollToQuestion = useCallback((questionIndex: number, behavior: 'smooth' | 'instant' = 'smooth') => {
-    const question = questions[questionIndex];
-    if (!question) return;
+  const scrollToQuestion = useCallback(
+    (questionIndex: number, behavior: "smooth" | "instant" = "smooth") => {
+      const question = questions[questionIndex];
+      if (!question) return;
 
-    isScrollingRef.current = true;
-    
-    // Clear existing timeout
-    if (scrollTimeoutRef.current) {
-      clearTimeout(scrollTimeoutRef.current);
-    }
+      isScrollingRef.current = true;
 
-    const questionElement = document.getElementById(`question-${question.id}`);
-    if (questionElement) {
-      questionElement.scrollIntoView({ 
-        behavior, 
-        block: 'start',
-        inline: 'nearest'
-      });
+      // Clear existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
 
-      // Reset scrolling flag after animation completes
-      scrollTimeoutRef.current = setTimeout(() => {
-        isScrollingRef.current = false;
-      }, behavior === 'smooth' ? 1000 : 100);
-    }
-  }, [questions]);
+      const questionElement = document.getElementById(
+        `question-${question.id}`
+      );
+      if (questionElement) {
+        questionElement.scrollIntoView({
+          behavior,
+          block: "start",
+          inline: "nearest",
+        });
+
+        // Reset scrolling flag after animation completes
+        scrollTimeoutRef.current = setTimeout(
+          () => {
+            isScrollingRef.current = false;
+          },
+          behavior === "smooth" ? 1000 : 100
+        );
+      }
+    },
+    [questions]
+  );
 
   // Scroll to first question of a page
-  const scrollToPageStart = useCallback((page: number, questionsPerPage: number) => {
-    const firstQuestionIndex = (page - 1) * questionsPerPage;
-    scrollToQuestion(firstQuestionIndex, 'smooth');
-  }, [scrollToQuestion]);
+  const scrollToPageStart = useCallback(
+    (page: number, questionsPerPage: number) => {
+      const firstQuestionIndex = (page - 1) * questionsPerPage;
+      scrollToQuestion(firstQuestionIndex, "smooth");
+    },
+    [scrollToQuestion]
+  );
 
   // Setup Intersection Observer
   useEffect(() => {
@@ -56,8 +67,8 @@ export const useQuestionTracker = ({
 
     const observerOptions: IntersectionObserverInit = {
       root: null,
-      rootMargin: '-20% 0px -60% 0px', // Trigger when question is in upper part of viewport
-      threshold: [0, 0.1, 0.5, 0.9, 1.0]
+      rootMargin: "-20% 0px -60% 0px", // Trigger when question is in upper part of viewport
+      threshold: [0, 0.1, 0.5, 0.9, 1.0],
     };
 
     observerRef.current = new IntersectionObserver((entries) => {
@@ -76,9 +87,9 @@ export const useQuestionTracker = ({
       });
 
       if (mostVisibleEntry) {
-        const questionId = mostVisibleEntry.target.id.replace('question-', '');
-        const questionIndex = questions.findIndex(q => q.id === questionId);
-        
+        const questionId = mostVisibleEntry.target.id.replace("question-", "");
+        const questionIndex = questions.findIndex((q) => q.id === questionId);
+
         if (questionIndex !== -1 && questionIndex !== currentQuestionIndex) {
           onQuestionChange(questionIndex);
         }
@@ -87,7 +98,7 @@ export const useQuestionTracker = ({
 
     // Observe all question elements
     const questionElements = document.querySelectorAll('[id^="question-"]');
-    questionElements.forEach(element => {
+    questionElements.forEach((element) => {
       if (observerRef.current) {
         observerRef.current.observe(element);
       }
@@ -95,7 +106,7 @@ export const useQuestionTracker = ({
 
     return () => {
       if (observerRef.current) {
-        questionElements.forEach(element => {
+        questionElements.forEach((element) => {
           observerRef.current?.unobserve(element);
         });
         observerRef.current.disconnect();
@@ -121,6 +132,6 @@ export const useQuestionTracker = ({
   return {
     scrollToQuestion,
     scrollToPageStart,
-    isScrolling: isScrollingRef.current
+    isScrolling: isScrollingRef.current,
   };
 };

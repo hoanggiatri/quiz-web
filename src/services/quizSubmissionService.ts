@@ -1,7 +1,10 @@
 import axios from "axios";
 import type { PublicQuiz } from "./quizService";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL =
+  import.meta.env.VITE_QUIZ_BASE_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:8080";
 
 export interface QuizSession {
   sessionId: string;
@@ -251,65 +254,6 @@ class QuizSubmissionService {
         timeLimit: 3600, // 1 hour
         startTime,
       },
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  /**
-   * Mock save answer
-   */
-  async mockSaveAnswer(
-    request: SaveAnswerRequest
-  ): Promise<SaveAnswerResponse> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
-    return {
-      status: 200,
-      message: "Answer saved successfully",
-      data: {
-        saved: true,
-        timestamp: new Date().toISOString(),
-      },
-    };
-  }
-
-  /**
-   * Mock submit quiz
-   */
-  async mockSubmitQuiz(sessionId: string): Promise<SubmitQuizResponse> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const score = Math.floor(Math.random() * 30) + 70; // Random score 70-100
-    const totalQuestions = 10;
-    const correctAnswers = Math.floor((score / 100) * totalQuestions);
-
-    const result: QuizResult = {
-      submissionId: `submission_${Date.now()}`,
-      examQuizzesId: "quiz_1",
-      userId: "user_1",
-      score,
-      maxScore: 100,
-      percentage: score,
-      correctAnswers,
-      totalQuestions,
-      timeSpent: 1800, // 30 minutes
-      submittedAt: new Date().toISOString(),
-      gradedAt: new Date().toISOString(),
-      answers: Array.from({ length: totalQuestions }, (_, i) => ({
-        questionId: `question_${i + 1}`,
-        selectedAnswers: [`answer_${i + 1}_1`],
-        correctAnswers: [`answer_${i + 1}_1`],
-        isCorrect: i < correctAnswers,
-        points: i < correctAnswers ? 10 : 0,
-      })),
-    };
-
-    return {
-      status: 200,
-      message: "Quiz submitted successfully",
-      data: result,
       timestamp: new Date().toISOString(),
     };
   }

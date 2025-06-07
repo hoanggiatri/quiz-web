@@ -7,6 +7,23 @@ import type {
 } from "@/types/auth";
 import { tokenService } from "./tokenService";
 
+// Register types
+export interface RegisterData {
+  username: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  birthDay: string; // Format: YYYY-MM-DD
+  serviceTypes: string[]; // Will be hardcoded to ["QUIZ", "CLASSROOM"]
+}
+
+export interface RegisterResponse {
+  status: number;
+  message: string;
+}
+
 /**
  * Authentication Service
  * Xử lý tất cả các phương thức đăng nhập
@@ -14,9 +31,58 @@ import { tokenService } from "./tokenService";
 
 class AuthService {
   private readonly API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+    import.meta.env.VITE_QUIZ_BASE_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    "http://localhost:8080";
   private readonly QLDT_API_URL =
     import.meta.env.VITE_QLDT_API_URL || "http://localhost:8081";
+  private readonly AUTH_BASE_URL =
+    import.meta.env.VITE_AUTH_URL || "https://api.learnsql.store/api/auth/";
+
+  /**
+   * Đăng ký tài khoản mới
+   */
+  async register(
+    data: Omit<RegisterData, "serviceTypes">
+  ): Promise<RegisterResponse> {
+    // Check if we should use mock or real API
+    const useMock =
+      import.meta.env.VITE_USE_MOCK_AUTH === "true" || import.meta.env.DEV; // Use mock in development by default
+
+    if (useMock) {
+      console.log("🔧 Using mock registration API (CORS workaround)");
+      return this.mockRegister(data);
+    }
+
+    try {
+      const registerPayload: RegisterData = {
+        ...data,
+        serviceTypes: ["QUIZ", "CLASSROOM"], // Hardcoded as requested
+      };
+
+      const response = await fetch(`${this.AUTH_BASE_URL}register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(registerPayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Đăng ký thất bại");
+      }
+
+      const result: RegisterResponse = await response.json();
+      return result;
+    } catch (error) {
+      console.error("❌ Registration failed:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Có lỗi xảy ra khi đăng ký");
+    }
+  }
 
   /**
    * Đăng nhập bằng email/password
@@ -334,6 +400,116 @@ class AuthService {
 
     tokenService.setTokens(mockResponse.tokens);
     return mockResponse;
+  }
+
+  /**
+   * Mock register for development
+   */
+  async mockRegister(
+    data: Omit<RegisterData, "serviceTypes">
+  ): Promise<RegisterResponse> {
+    // Simulate API delay
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    // Simulate some validation errors for testing
+    if (data.email === "test@error.com") {
+      throw new Error("Email đã được sử dụng");
+    }
+
+    if (data.username === "admin") {
+      throw new Error("Tên đăng nhập không được phép");
+    }
+
+    // Mock successful response
+    const mockResponse: RegisterResponse = {
+      status: 1,
+      message: "Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.",
+    };
+
+    console.log("✅ Mock registration successful:", {
+      username: data.username,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phone: data.phone,
+      birthDay: data.birthDay,
+      serviceTypes: ["QUIZ", "CLASSROOM"],
+    });
+
+    return mockResponse;
+  }
+
+  /**
+   * Validation methods for registration
+   */
+
+  // Validate email format
+  validateEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  // Validate phone format (Vietnamese phone numbers)
+  validatePhone(phone: string): boolean {
+    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+    return phoneRegex.test(phone);
+  }
+
+  // Validate password strength
+  validatePassword(password: string): { isValid: boolean; message?: string } {
+    if (password.length < 6) {
+      return { isValid: false, message: "Mật khẩu phải có ít nhất 6 ký tự" };
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return {
+        isValid: false,
+        message: "Mật khẩu phải có ít nhất 1 chữ thường",
+      };
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return { isValid: false, message: "Mật khẩu phải có ít nhất 1 chữ hoa" };
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return { isValid: false, message: "Mật khẩu phải có ít nhất 1 số" };
+    }
+    return { isValid: true };
+  }
+
+  // Format date for API (YYYY-MM-DD)
+  formatDateForAPI(date: Date): string {
+    return date.toISOString().split("T")[0];
+  }
+
+  // Parse date from input (YYYY-MM-DD)
+  parseDateFromInput(dateString: string): Date | null {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  // Validate age (must be at least 13 years old)
+  validateAge(birthDate: string): { isValid: boolean; message?: string } {
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
+      age--;
+    }
+
+    if (age < 13) {
+      return { isValid: false, message: "Bạn phải ít nhất 13 tuổi để đăng ký" };
+    }
+
+    if (age > 100) {
+      return { isValid: false, message: "Vui lòng kiểm tra lại ngày sinh" };
+    }
+
+    return { isValid: true };
   }
 }
 

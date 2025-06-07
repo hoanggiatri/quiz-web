@@ -11,7 +11,10 @@ import {
   transformDetailApiResponseToAssignment,
 } from "@/types/assignment";
 
-const API_BASE_URL = "http://localhost:8080";
+const API_BASE_URL =
+  import.meta.env.VITE_QUIZ_BASE_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:8080";
 
 // Mock data for development
 const mockAssignments: Assignment[] = [

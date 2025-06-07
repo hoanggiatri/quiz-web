@@ -1,7 +1,9 @@
-export enum QuestionType {
-  SINGLE_CHOICE = "single_choice",
-  MULTIPLE_CHOICE = "multiple_choice",
-}
+export const QuestionType = {
+  SINGLE_CHOICE: "single_choice",
+  MULTIPLE_CHOICE: "multiple_choice",
+} as const;
+
+export type QuestionType = (typeof QuestionType)[keyof typeof QuestionType];
 
 // Kiểu dữ liệu cho đáp án
 export interface Answer {

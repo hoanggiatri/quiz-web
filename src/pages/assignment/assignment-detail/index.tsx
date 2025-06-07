@@ -26,6 +26,7 @@ import {
   Target
 } from "lucide-react";
 import { assignmentManagementService } from "@/services/assignmentManagementService";
+import { assignmentService } from "@/services/assignmentService";
 import type { Assignment } from "@/types/assignment";
 
 export default function AssignmentDetailPage() {
@@ -42,6 +43,7 @@ export default function AssignmentDetailPage() {
   const [submissionFiles, setSubmissionFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedFile, setSubmittedFile] = useState<File | null>(null);
 
   // Load assignment
   useEffect(() => {
@@ -66,9 +68,10 @@ export default function AssignmentDetailPage() {
   // Handle file upload
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    if (files) {
-      const newFiles = Array.from(files);
-      setSubmissionFiles(prev => [...prev, ...newFiles]);
+    if (files && files.length > 0) {
+      // API chỉ hỗ trợ 1 file, thay thế file hiện tại
+      const newFile = files[0];
+      setSubmissionFiles([newFile]);
     }
   };
 
@@ -79,27 +82,39 @@ export default function AssignmentDetailPage() {
 
   // Handle submission
   const handleSubmission = async () => {
-    if (!assignment) return;
+    if (!assignment || submissionFiles.length === 0) return;
 
     try {
       setSubmitting(true);
+      setError(null);
 
-      // Create FormData for file upload
-      const formData = new FormData();
-      formData.append('assignmentId', assignment.id);
-      formData.append('submissionText', submissionText);
+      // API chỉ hỗ trợ submit 1 file, lấy file đầu tiên
+      const fileToSubmit = submissionFiles[0];
 
-      submissionFiles.forEach((file, index) => {
-        formData.append(`files[${index}]`, file);
+      console.log('Submitting assignment:', {
+        assignmentId: assignment.id,
+        fileName: fileToSubmit.name,
+        fileSize: fileToSubmit.size,
+        fileType: fileToSubmit.type
       });
 
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
+      // Call API to submit assignment
+      const response = await assignmentService.submitAssignment(
+        assignment.id,
+        fileToSubmit
+      );
+
+      console.log('Assignment submitted successfully:', response);
 
       setSubmitted(true);
+      setSubmittedFile(fileToSubmit); // Save submitted file info
+      setSubmissionFiles([]); // Clear files after successful submission
+      setSubmissionText(''); // Clear text
+
       alert('Nộp bài thành công!');
 
     } catch (err) {
+      console.error('Error submitting assignment:', err);
       setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi nộp bài');
     } finally {
       setSubmitting(false);
@@ -462,12 +477,37 @@ export default function AssignmentDetailPage() {
             </CardHeader>
             <CardContent>
               {submitted ? (
-                <div className="text-center py-6">
-                  <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
-                  <h3 className="font-medium text-green-600 mb-2">Đã nộp bài</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Bài làm của bạn đã được nộp thành công
-                  </p>
+                <div className="space-y-4">
+                  <div className="text-center py-4">
+                    <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
+                    <h3 className="font-medium text-green-600 mb-2">Đã nộp bài</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Bài làm của bạn đã được nộp thành công
+                    </p>
+                  </div>
+
+                  {/* Display submitted file */}
+                  {submittedFile && (
+                    <div className="border rounded-lg p-4 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                      <div className="flex items-center gap-3">
+                        <Paperclip className="w-5 h-5 text-green-600" />
+                        <div className="flex-1">
+                          <div className="font-medium text-green-700 dark:text-green-400">
+                            File đã nộp:
+                          </div>
+                          <div className="text-sm text-green-600 dark:text-green-500">
+                            {submittedFile.name}
+                          </div>
+                          <div className="text-xs text-green-500">
+                            {formatFileSize(submittedFile.size)} • {submittedFile.type}
+                          </div>
+                        </div>
+                        <Badge variant="outline" className="text-green-600 border-green-300">
+                          Đã nộp
+                        </Badge>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -532,14 +572,13 @@ export default function AssignmentDetailPage() {
                     <input
                       ref={fileInputRef}
                       type="file"
-                      multiple
                       onChange={handleFileUpload}
                       className="hidden"
                       accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
                     />
                     <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                     <p className="text-sm text-gray-600 mb-2">
-                      Kéo thả tệp vào đây hoặc
+                      Chọn một tệp để nộp bài
                     </p>
                     <Button
                       variant="outline"
@@ -549,42 +588,46 @@ export default function AssignmentDetailPage() {
                       Chọn tệp
                     </Button>
                     <p className="text-xs text-gray-500 mt-2">
-                      Hỗ trợ: PDF, DOC, DOCX, TXT, JPG, PNG (tối đa 10MB)
+                      Hỗ trợ: PDF, DOC, DOCX, TXT, JPG, PNG (tối đa 10MB)<br/>
+                      <strong>Lưu ý:</strong> Chỉ có thể nộp 1 tệp duy nhất
                     </p>
                   </div>
                 </div>
 
-                {/* Uploaded Files */}
+                {/* Uploaded File */}
                 {submissionFiles.length > 0 && (
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      Tệp đã chọn ({submissionFiles.length})
+                      Tệp đã chọn
                     </label>
-                    {submissionFiles.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 border rounded">
-                        <div className="flex items-center gap-2">
-                          <Paperclip className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm">{file.name}</span>
-                          <span className="text-xs text-gray-500">
-                            ({formatFileSize(file.size)})
-                          </span>
+                    <div className="flex items-center justify-between p-3 border rounded-lg bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                      <div className="flex items-center gap-3">
+                        <Paperclip className="w-4 h-4 text-green-600" />
+                        <div>
+                          <div className="text-sm font-medium text-green-700 dark:text-green-400">
+                            {submissionFiles[0].name}
+                          </div>
+                          <div className="text-xs text-green-600 dark:text-green-500">
+                            {formatFileSize(submissionFiles[0].size)}
+                          </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(index)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
                       </div>
-                    ))}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeFile(0)}
+                        className="text-green-600 hover:text-green-700 hover:bg-green-100"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 )}
 
                 {/* Submit Button */}
                 <Button
                   onClick={handleSubmission}
-                  disabled={submitting || (submissionFiles.length === 0 && !submissionText.trim())}
+                  disabled={submitting || submissionFiles.length === 0}
                   className="w-full"
                 >
                   {submitting ? (
@@ -595,10 +638,16 @@ export default function AssignmentDetailPage() {
                   ) : (
                     <>
                       <Send className="w-4 h-4 mr-2" />
-                      Nộp bài
+                      Nộp bài ({submissionFiles.length > 0 ? submissionFiles[0].name : 'Chưa chọn file'})
                     </>
                   )}
                 </Button>
+
+                {submissionFiles.length === 0 && (
+                  <p className="text-xs text-orange-600 text-center">
+                    Vui lòng chọn một tệp để nộp bài
+                  </p>
+                )}
               </CardContent>
             </Card>
           )}

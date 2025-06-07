@@ -1,0 +1,207 @@
+/* Register Page Styles */
+
+/* Form animations */
+.register-form {
+  animation: slideInUp 0.6s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Input focus effects */
+.register-input:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: rgb(59, 130, 246);
+}
+
+/* Error state */
+.register-input.error {
+  border-color: rgb(239, 68, 68);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Success state */
+.register-input.success {
+  border-color: rgb(34, 197, 94);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+/* Password strength indicator */
+.password-strength {
+  height: 4px;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.password-strength.weak {
+  background-color: rgb(239, 68, 68);
+  width: 25%;
+}
+
+.password-strength.medium {
+  background-color: rgb(245, 158, 11);
+  width: 50%;
+}
+
+.password-strength.strong {
+  background-color: rgb(34, 197, 94);
+  width: 75%;
+}
+
+.password-strength.very-strong {
+  background-color: rgb(34, 197, 94);
+  width: 100%;
+}
+
+/* Floating label effect */
+.floating-label {
+  position: relative;
+}
+
+.floating-label input:focus + label,
+.floating-label input:not(:placeholder-shown) + label {
+  transform: translateY(-1.5rem) scale(0.875);
+  color: rgb(59, 130, 246);
+}
+
+.floating-label label {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  transition: all 0.2s ease;
+  pointer-events: none;
+  background: white;
+  padding: 0 0.25rem;
+}
+
+/* Button hover effects */
+.register-button {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.register-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.register-button:active {
+  transform: translateY(0);
+}
+
+/* Loading spinner */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Success animation */
+.success-checkmark {
+  animation: checkmark 0.6s ease-in-out;
+}
+
+@keyframes checkmark {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Form validation feedback */
+.validation-message {
+  animation: fadeInDown 0.3s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .register-form {
+    padding: 1.5rem;
+  }
+  
+  .register-input {
+    height: 3rem;
+  }
+  
+  .register-button {
+    height: 3rem;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .floating-label label {
+    background: rgb(31, 41, 55);
+  }
+  
+  .register-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  }
+}
+
+/* Accessibility improvements */
+.register-input:focus-visible {
+  outline: 2px solid rgb(59, 130, 246);
+  outline-offset: 2px;
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .register-input {
+    border-width: 2px;
+  }
+  
+  .register-button {
+    border-width: 2px;
+    border-color: currentColor;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .register-form,
+  .register-button,
+  .validation-message,
+  .success-checkmark {
+    animation: none;
+  }
+  
+  .register-button:hover {
+    transform: none;
+  }
+}

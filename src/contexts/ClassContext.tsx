@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import axios from "axios";
+import { classService } from "@/services/classService";
 
 interface Class {
   id: string;
@@ -40,8 +41,8 @@ export const ClassProvider = ({ userId, children }: ClassProviderProps) => {
   useEffect(() => {
     if (!userId) return;
     setLoading(true);
-    axios.get(`http://localhost:8080/classes/user/${userId}`)
-      .then(res => {
+    classService.getClassesByUser(userId)
+      .then((res: { data: { data: Class[] } }) => {
         setClasses(res.data.data);
         setSelectedClass(res.data.data[0] || null);
       })

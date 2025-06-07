@@ -1,12 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import MainLayout from '@/layouts/MainLayout';
 import LoginPage from '@/pages/auth/login';
+import RegisterPage from '@/pages/auth/register';
 import DashboardPage from '@/pages/home';
 import QuizListPage from '@/pages/quiz/quiz-list';
 import QuizDetailPage from '@/pages/quiz/quiz-detail';
 import QuizTakingPage from '@/pages/quiz/quiz-taking';
-import QuizTakingDemoPage from '@/pages/quiz/quiz-taking/demo';
+import QuizTakingDemoPage from '@/pages/quiz/quiz-taking-demo';
 import QuizResultPage from '@/pages/quiz/quiz-result';
+import QuizResultDemoPage from '@/pages/quiz/quiz-result-demo';
 import LeaderboardPage from '@/pages/leaderboard';
 import LearningMaterialsPage from '@/pages/learning-materials';
 import NotificationsPage from '@/pages/notifications';
@@ -25,7 +27,7 @@ function AppContent() {
   // Route bảo vệ - chỉ cho phép truy cập khi đã đăng nhập
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (!isAuthenticated) {
-      return <Navigate to="/login" replace />;
+      return <Navigate to="/auth/login" replace />;
     }
     return <>{children}</>;
   };
@@ -33,15 +35,28 @@ function AppContent() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Trang đăng nhập */}
+        {/* Auth routes */}
         <Route
-          path="/login"
+          path="/auth/login"
           element={
             isAuthenticated ?
               <Navigate to="/" replace /> :
               <LoginPage />
           }
         />
+
+        <Route
+          path="/auth/register"
+          element={
+            isAuthenticated ?
+              <Navigate to="/" replace /> :
+              <RegisterPage onRegisterSuccess={() => window.location.href = '/auth/login'} />
+          }
+        />
+
+        {/* Legacy routes - redirect to new auth paths */}
+        <Route path="/login" element={<Navigate to="/auth/login" replace />} />
+        <Route path="/register" element={<Navigate to="/auth/register" replace />} />
 
         {/* Các trang yêu cầu đăng nhập */}
         <Route
@@ -95,21 +110,33 @@ function AppContent() {
           <Route
             path="/quiz/quiz-taking-demo"
             element={
-              <ProtectedRoute>
+              // <ProtectedRoute>
                 <MainLayout onLogout={logout}>
                   <QuizTakingDemoPage />
                 </MainLayout>
-              </ProtectedRoute>
+              // </ProtectedRoute>
             }
           />
-          
-          {/* Trang kết quả bài thi */}
+
+
           <Route
             path="/quiz/quiz-result/:submissionId"
             element={
               <ProtectedRoute>
                 <MainLayout onLogout={logout}>
                   <QuizResultPage />
+                </MainLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Trang demo kết quả bài thi */}
+          <Route
+            path="/quiz/quiz-result-demo"
+            element={
+              <ProtectedRoute>
+                <MainLayout onLogout={logout}>
+                  <QuizResultDemoPage />
                 </MainLayout>
               </ProtectedRoute>
             }

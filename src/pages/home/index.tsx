@@ -2,13 +2,15 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Card,
-  CardContent} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import {
-  CheckCircle,
   Clock3,
   BookOpen as BookIcon,
   Play,
@@ -17,32 +19,24 @@ import {
   Calendar,
   GraduationCap,
   Flame,
-  ArrowUpRight,
   Plus,
-  TrendingUp} from "lucide-react";
-import UserDebugInfo from "@/components/debug/UserDebugInfo";
-import "./styles.css";
+  TrendingUp,
+  Target,
+  BarChart3,
+  Activity,
+  Bell,
+  Star,
+} from "lucide-react";
+import { GradeChart } from "@/components/charts/GradeChart";
+import { AssignmentProgressChart } from "@/components/charts/AssignmentProgressChart";
+import { QuizStatsChart } from "@/components/charts/QuizStatsChart";
+import { ActivityChart } from "@/components/charts/ActivityChart";
 
 export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [greeting, setGreeting] = useState("");
 
-  // Update time every minute
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-
-    // Set greeting based on time
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting("Chào buổi sáng");
-    else if (hour < 18) setGreeting("Chào buổi chiều");
-    else setGreeting("Chào buổi tối");
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Mock user data
+  // Mock data
   const userData = {
     name: "Nguyễn Văn A",
     avatar: "https://github.com/shadcn.png",
@@ -50,29 +44,89 @@ export default function DashboardPage() {
     studentId: "SV2024001",
     class: "CNTT-K19",
     semester: "Học kỳ 2 - 2024-2025",
-    streak: 7, // Learning streak in days
+    streak: 7,
     level: 15,
     xp: 2450,
     nextLevelXp: 3000
   };
 
-  // Quick actions
-  const quickActions = [
+  const stats = {
+    totalQuizzes: 24,
+    completedQuizzes: 18,
+    totalAssignments: 12,
+    completedAssignments: 8,
+    averageScore: 8.5,
+    streak: 7,
+    totalStudents: 156,
+    activeClasses: 4
+  };
+
+  const recentActivities = [
     {
-      title: "Làm bài tập",
-      description: "Bắt đầu làm bài tập mới",
-      icon: <FileText className="w-5 h-5" />,
-      href: "/assignment/assignment-list",
-      color: "bg-blue-500",
-      count: 3
+      id: 1,
+      type: "quiz",
+      title: "Hoàn thành Quiz Toán học",
+      score: 9.2,
+      time: "2 giờ trước",
+      icon: Award
     },
     {
-      title: "Thi thử",
-      description: "Luyện tập với đề thi mẫu",
+      id: 2,
+      type: "assignment",
+      title: "Nộp bài tập Vật lý",
+      time: "5 giờ trước",
+      icon: FileText
+    },
+    {
+      id: 3,
+      type: "quiz",
+      title: "Hoàn thành Quiz Tiếng Anh",
+      score: 8.8,
+      time: "1 ngày trước",
+      icon: Award
+    }
+  ];
+
+  const upcomingTasks = [
+    {
+      id: 1,
+      title: "Quiz Lịch sử",
+      type: "quiz",
+      dueDate: "2024-01-18",
+      priority: "high"
+    },
+    {
+      id: 2,
+      title: "Bài tập Toán",
+      type: "assignment",
+      dueDate: "2024-01-20",
+      priority: "medium"
+    },
+    {
+      id: 3,
+      title: "Thuyết trình Văn",
+      type: "assignment",
+      dueDate: "2024-01-22",
+      priority: "low"
+    }
+  ];
+
+  const quickActions = [
+    {
+      title: "Làm Quiz",
+      description: "Bắt đầu làm quiz mới",
       icon: <Play className="w-5 h-5" />,
-      href: "/quiz/quiz-taking-demo",
-      color: "bg-green-500",
+      href: "/quiz/quiz-list",
+      color: "bg-blue-500",
       count: 5
+    },
+    {
+      title: "Bài tập",
+      description: "Xem bài tập được giao",
+      icon: <FileText className="w-5 h-5" />,
+      href: "/assignment/assignment-list",
+      color: "bg-green-500",
+      count: 3
     },
     {
       title: "Xem điểm",
@@ -92,202 +146,391 @@ export default function DashboardPage() {
     }
   ];
 
-  // Recent activities
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
 
-  // Upcoming assignments with enhanced data
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Chào buổi sáng");
+    else if (hour < 18) setGreeting("Chào buổi chiều");
+    else setGreeting("Chào buổi tối");
 
-  // Notifications data
+    return () => clearInterval(timer);
+  }, []);
 
-  // Chart data
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit'
+    });
+  };
 
-
-  // Helper functions
-
-
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'destructive';
+      case 'medium': return 'default';
+      case 'low': return 'secondary';
+      default: return 'default';
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        {/* Enhanced Header Section */}
-        <section className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
+      {/* Header - Full Width */}
+      <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50 shadow-sm">
+        <div className="px-4 sm:px-6 lg:px-8 py-6 w-full">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 max-w-none">
             {/* Welcome Message */}
             <div className="flex items-center gap-4">
               <div className="relative">
-                <Avatar className="h-16 w-16 border-4 border-white shadow-lg">
+                <Avatar className="h-16 w-16 ring-4 ring-blue-500/20 shadow-lg">
                   <AvatarImage src={userData.avatar} alt={userData.name} />
-                  <AvatarFallback className="text-lg font-semibold">
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white text-lg font-bold">
                     {userData.name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
+                <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 shadow-md">
                   <div className="w-3 h-3 bg-white rounded-full"></div>
                 </div>
               </div>
-
               <div>
-                <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  {greeting}, {userData.name}!
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  {greeting}, {userData.name}! <span className="text-2xl">👋</span>
                 </h1>
-                <p className="text-muted-foreground mt-1 flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4" />
+                <p className="text-gray-600 dark:text-gray-300">
                   {userData.class} • {userData.semester}
                 </p>
-                <p className="text-sm text-muted-foreground">
-                  {currentTime.toLocaleDateString('vi-VN', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Flame className="w-4 h-4 text-orange-500" />
+                  <span className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                    {userData.streak} ngày liên tiếp
+                  </span>
+                </div>
               </div>
             </div>
 
-            {/* User Stats & Level */}
-            <div className="flex items-center gap-4">
-              {/* Learning Streak */}
-              <Card className="bg-gradient-to-r from-orange-500 to-red-500 text-white border-0">
-                <CardContent className="p-4 text-center">
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <Flame className="w-5 h-5" />
-                    <span className="text-2xl font-bold">{userData.streak}</span>
+            {/* Time and Level - Improved Alignment */}
+            <div className="flex items-center gap-3">
+              <Card className="p-4 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm min-w-[120px]">
+                <div className="text-center">
+                  <Clock3 className="w-5 h-5 mx-auto mb-2 text-blue-500" />
+                  <div className="text-lg font-mono font-bold text-gray-900 dark:text-white leading-tight">
+                    {formatTime(currentTime)}
                   </div>
-                  <p className="text-xs opacity-90">Ngày liên tiếp</p>
-                </CardContent>
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                    Hôm nay
+                  </div>
+                </div>
               </Card>
 
-              {/* Level Progress */}
-              <Card className="bg-gradient-to-r from-purple-500 to-blue-500 text-white border-0">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold">Lv.{userData.level}</div>
-                      <div className="text-xs opacity-90">Level</div>
-                    </div>
-                    <div className="flex-1">
-                      <Progress
-                        value={(userData.xp / userData.nextLevelXp) * 100}
-                        className="h-2 bg-white/20"
-                      />
-                      <div className="text-xs mt-1 opacity-90">
-                        {userData.xp}/{userData.nextLevelXp} XP
-                      </div>
-                    </div>
+              <Card className="p-4 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm min-w-[120px]">
+                <div className="text-center">
+                  <Star className="w-5 h-5 mx-auto mb-2 text-yellow-500 fill-current" />
+                  <div className="text-lg font-bold text-gray-900 dark:text-white leading-tight">
+                    Level {userData.level}
                   </div>
-                </CardContent>
+                  <div className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                    {userData.xp}/{userData.nextLevelXp} XP
+                  </div>
+                </div>
               </Card>
             </div>
           </div>
-        </section>
+        </div>
+      </div>
 
-        {/* Quick Actions */}
-        <section className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Hành động nhanh</h2>
-            <Button variant="ghost" size="sm">
-              <Plus className="w-4 h-4 mr-2" />
-              Tùy chỉnh
-            </Button>
+      {/* Main Content - Full Width */}
+      <div className="w-full">
+        <div className="px-4 sm:px-6 lg:px-8 py-8 max-w-none">
+          {/* Quick Stats - Improved Consistency */}
+          <section className="mb-10">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="p-6 hover:shadow-lg transition-all duration-200 hover:scale-105">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                      {stats.completedQuizzes}
+                    </div>
+                    <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      Quiz hoàn thành
+                    </div>
+                  </div>
+                  <div className="p-3 bg-blue-100 dark:bg-blue-900/20 rounded-xl">
+                    <BookIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 hover:shadow-lg transition-all duration-200 hover:scale-105">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                      {stats.completedAssignments}
+                    </div>
+                    <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      Bài tập hoàn thành
+                    </div>
+                  </div>
+                  <div className="p-3 bg-green-100 dark:bg-green-900/20 rounded-xl">
+                    <FileText className="w-6 h-6 text-green-600 dark:text-green-400" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 hover:shadow-lg transition-all duration-200 hover:scale-105">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                      {stats.averageScore}
+                    </div>
+                    <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      Điểm trung bình
+                    </div>
+                  </div>
+                  <div className="p-3 bg-purple-100 dark:bg-purple-900/20 rounded-xl">
+                    <Award className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6 hover:shadow-lg transition-all duration-200 hover:scale-105">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                      {stats.streak}
+                    </div>
+                    <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      Ngày liên tiếp
+                    </div>
+                  </div>
+                  <div className="p-3 bg-orange-100 dark:bg-orange-900/20 rounded-xl">
+                    <TrendingUp className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </section>
+
+        {/* Main Content Grid - Enhanced Spacing */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+          {/* Left Column - Charts */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Charts Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+              {/* Grade Trend Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-blue-500" />
+                    Điểm trung bình theo tháng
+                  </CardTitle>
+                  <CardDescription>
+                    Xu hướng điểm số trong 12 tháng qua
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <GradeChart />
+                </CardContent>
+              </Card>
+
+              {/* Assignment Progress Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-green-500" />
+                    Tiến độ bài tập
+                  </CardTitle>
+                  <CardDescription>
+                    Thống kê hoàn thành bài tập
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <AssignmentProgressChart />
+                </CardContent>
+              </Card>
+
+              {/* Quiz Stats Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5 text-purple-500" />
+                    Phân bố điểm Quiz
+                  </CardTitle>
+                  <CardDescription>
+                    Số lượng quiz theo khoảng điểm
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <QuizStatsChart />
+                </CardContent>
+              </Card>
+
+              {/* Activity Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-orange-500" />
+                    Hoạt động tuần này
+                  </CardTitle>
+                  <CardDescription>
+                    Quiz và bài tập theo ngày
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ActivityChart />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  Hành động nhanh
+                </CardTitle>
+                <CardDescription>
+                  Các tác vụ thường dùng
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {quickActions.map((action, index) => (
+                    <Link key={index} to={action.href}>
+                      <Card className="p-4 hover:shadow-lg transition-all duration-200 cursor-pointer group">
+                        <div className="text-center space-y-2">
+                          <div className={`w-12 h-12 ${action.color} rounded-lg flex items-center justify-center mx-auto group-hover:scale-110 transition-transform`}>
+                            <div className="text-white">
+                              {action.icon}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="font-medium text-sm">{action.title}</div>
+                            <div className="text-xs text-muted-foreground">{action.description}</div>
+                            {action.count > 0 && (
+                              <Badge variant="secondary" className="text-xs mt-1">
+                                {action.count}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action, index) => (
-              <Link key={index} to={action.href}>
-                <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-0 bg-white/80 backdrop-blur-sm">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`p-3 rounded-xl ${action.color} text-white group-hover:scale-110 transition-transform`}>
-                        {action.icon}
+          {/* Right Column - Sidebar */}
+          <div className="space-y-8">
+            {/* Recent Activities - Enhanced */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="w-5 h-5 text-blue-500" />
+                  Hoạt động gần đây
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-0">
+                {recentActivities.map((activity, index) => (
+                  <div key={activity.id}>
+                    <div className="flex items-center gap-3 py-3">
+                      <div className="p-2.5 bg-gray-100 dark:bg-gray-800 rounded-lg flex-shrink-0">
+                        <activity.icon className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                       </div>
-                      {action.count > 0 && (
-                        <Badge variant="secondary" className="bg-gray-100 text-gray-700">
-                          {action.count}
-                        </Badge>
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {activity.title}
+                        </p>
+                        {activity.score && (
+                          <p className="text-sm text-green-600 dark:text-green-400 font-medium mt-0.5">
+                            Điểm: {activity.score}
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {activity.time}
+                        </p>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                      {action.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {action.description}
-                    </p>
-                    <div className="mt-4 flex items-center text-primary text-sm font-medium">
-                      Bắt đầu
-                      <ArrowUpRight className="w-4 h-4 ml-1 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    {index < recentActivities.length - 1 && (
+                      <div className="border-b border-gray-100 dark:border-gray-800"></div>
+                    )}
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Upcoming Tasks */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Calendar className="w-5 h-5" />
+                  Sắp tới
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {upcomingTasks.map((task) => (
+                  <div key={task.id} className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {task.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatDate(task.dueDate)}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
+                    <Badge variant={getPriorityColor(task.priority)}>
+                      {task.type === 'quiz' ? 'Quiz' : 'Bài tập'}
+                    </Badge>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            {/* Progress Overview */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5" />
+                  Tiến độ học tập
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Quiz hoàn thành</span>
+                    <span>{stats.completedQuizzes}/{stats.totalQuizzes}</span>
+                  </div>
+                  <Progress value={(stats.completedQuizzes / stats.totalQuizzes) * 100} />
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Bài tập hoàn thành</span>
+                    <span>{stats.completedAssignments}/{stats.totalAssignments}</span>
+                  </div>
+                  <Progress value={(stats.completedAssignments / stats.totalAssignments) * 100} />
+                </div>
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Level Progress</span>
+                    <span>{userData.xp}/{userData.nextLevelXp} XP</span>
+                  </div>
+                  <Progress value={(userData.xp / userData.nextLevelXp) * 100} />
+                </div>
+              </CardContent>
+            </Card>
+            </div>
           </div>
-        </section>
-
-        {/* Statistics Cards */}
-        <section className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-blue-100 text-sm">Điểm trung bình</p>
-                    <h3 className="text-3xl font-bold">8.5</h3>
-                    <p className="text-blue-100 text-xs mt-1">+0.3 từ tháng trước</p>
-                  </div>
-                  <div className="bg-white/20 p-3 rounded-full">
-                    <TrendingUp className="h-6 w-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-green-100 text-sm">Tỷ lệ hoàn thành</p>
-                    <h3 className="text-3xl font-bold">85%</h3>
-                    <p className="text-green-100 text-xs mt-1">12/15 bài tập</p>
-                  </div>
-                  <div className="bg-white/20 p-3 rounded-full">
-                    <CheckCircle className="h-6 w-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-yellow-100 text-sm">Giờ học tập</p>
-                    <h3 className="text-3xl font-bold">42h</h3>
-                    <p className="text-yellow-100 text-xs mt-1">Tuần này</p>
-                  </div>
-                  <div className="bg-white/20 p-3 rounded-full">
-                    <Clock3 className="h-6 w-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-purple-100 text-sm">Bài học hoàn thành</p>
-                    <h3 className="text-3xl font-bold">12</h3>
-                    <p className="text-purple-100 text-xs mt-1">Tháng này</p>
-                  </div>
-                  <div className="bg-white/20 p-3 rounded-full">
-                    <BookIcon className="h-6 w-6" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+        </div>
       </div>
     </div>
   );

@@ -2,17 +2,18 @@ import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Cloud, 
-  CloudOff, 
-  Loader2, 
-  CheckCircle, 
-  AlertTriangle, 
+import {
+  Cloud,
+  CloudOff,
+  Loader2,
+  CheckCircle,
+  AlertTriangle,
   RefreshCw,
   Clock
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import type { AutoSaveStatus } from '@/hooks/useAutoSave';
+import "./style.css";
 
 interface AutoSaveStatusProps {
   status: AutoSaveStatus;
