@@ -7,15 +7,14 @@ const API_BASE_URL =
 
 // Types for Class API
 export interface Class {
-  classId: string;
+  id: string;
   className: string;
   description?: string;
   teacherId: string;
-  teacherName?: string;
+  classCode: string;
   createdAt: string;
   updatedAt: string;
-  studentCount?: number;
-  status?: "active" | "inactive";
+  actions?: string;
 }
 
 export interface CreateClassRequest {
@@ -85,7 +84,10 @@ class ClassService {
    * Update class information
    * PUT /classes/update/{id}
    */
-  async updateClass(classId: string, data: Partial<UpdateClassRequest>): Promise<ClassResponse> {
+  async updateClass(
+    classId: string,
+    data: Partial<UpdateClassRequest>
+  ): Promise<ClassResponse> {
     try {
       const response = await axios.put(
         `${API_BASE_URL}/classes/update/${classId}`,
@@ -165,12 +167,9 @@ class ClassService {
    */
   async getAllClasses(): Promise<ClassListResponse> {
     try {
-      const response = await axios.get(
-        `${API_BASE_URL}/classes/get-all`,
-        {
-          headers: this.getAuthHeaders(),
-        }
-      );
+      const response = await axios.get(`${API_BASE_URL}/classes/get-all`, {
+        headers: this.getAuthHeaders(),
+      });
       return response.data;
     } catch (error) {
       console.error("Error fetching all classes:", error);

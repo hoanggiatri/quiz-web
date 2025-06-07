@@ -1,17 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import axios from "axios";
-import { classService } from "@/services/classService";
-
-interface Class {
-  id: string;
-  className: string;
-  teacherId: string;
-  classCode: string;
-  createdAt: string;
-  updatedAt: string;
-  actions: string;
-}
+import { classService, type Class } from "@/services/classService";
 
 interface ClassContextType {
   classes: Class[];
@@ -42,9 +31,9 @@ export const ClassProvider = ({ userId, children }: ClassProviderProps) => {
     if (!userId) return;
     setLoading(true);
     classService.getClassesByUser(userId)
-      .then((res: { data: { data: Class[] } }) => {
-        setClasses(res.data.data);
-        setSelectedClass(res.data.data[0] || null);
+      .then((res) => {
+        setClasses(res.data);
+        setSelectedClass(res.data[0] || null);
       })
       .catch(() => setClasses([]))
       .finally(() => setLoading(false));
