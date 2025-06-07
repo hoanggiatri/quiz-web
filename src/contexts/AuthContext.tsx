@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { 
   AuthContextType, 
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // Try to get current user info
           try {
             const userData = await authService.getCurrentUser();
-            setUser(userData.user);
+            setUser(userData);
           } catch (error) {
             console.error('Failed to get current user:', error);
             // If getting user fails, clear tokens
@@ -104,13 +104,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   /**
    * Login with Google
    */
-  const loginWithGoogle = useCallback(async (credential: string) => {
+  const loginWithGoogle = useCallback(async (idToken: string) => {
     try {
       setIsLoading(true);
-      
-      // Use mock Google login for development
-      const response = await authService.mockGoogleLogin(credential);
-      
+
+      // Use real Google login API
+      const response = await authService.loginWithGoogle(idToken);
+
       if (response.success) {
         setUser(response.user);
       } else {

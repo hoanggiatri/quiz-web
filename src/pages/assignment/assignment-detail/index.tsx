@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   ArrowLeft,
@@ -31,7 +29,6 @@ import type { Assignment } from "@/types/assignment";
 
 export default function AssignmentDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [assignment, setAssignment] = useState<Assignment | null>(null);

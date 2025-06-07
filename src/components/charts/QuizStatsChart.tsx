@@ -1,8 +1,9 @@
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  type ChartConfig,
 } from "@/components/ui/chart"
 
 const data = [

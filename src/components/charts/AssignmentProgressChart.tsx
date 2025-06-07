@@ -1,10 +1,8 @@
-import { Pie, PieChart, Cell, ResponsiveContainer } from "recharts"
+import { Pie, PieChart, Cell } from "recharts"
 import {
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
+  type ChartConfig,
 } from "@/components/ui/chart"
 
 const data = [

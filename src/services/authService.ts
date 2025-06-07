@@ -3,25 +3,36 @@ import type {
   QLDTCredentials,
   AuthResponse,
   QLDTAuthResponse,
-  GoogleAuthResponse,
 } from "@/types/auth";
 import { tokenService } from "./tokenService";
 
-// Register types
-export interface RegisterData {
+// Types for registration
+export interface RegisterRequest {
   username: string;
   password: string;
   firstName: string;
   lastName: string;
   email: string;
   phone: string;
-  birthDay: string; // Format: YYYY-MM-DD
-  serviceTypes: string[]; // Will be hardcoded to ["QUIZ", "CLASSROOM"]
+  birthDay: string; // Format: "yyyy-MM-dd"
+  serviceTypes: string[]; // Danh sách dịch vụ đăng ký
 }
 
 export interface RegisterResponse {
   status: number;
   message: string;
+}
+
+// Types for new login API
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  status: number;
+  accessToken: string;
+  refreshToken: string;
 }
 
 /**
@@ -31,61 +42,156 @@ export interface RegisterResponse {
 
 class AuthService {
   private readonly API_BASE_URL =
-    import.meta.env.VITE_QUIZ_BASE_URL ||
-    import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:8080";
-  private readonly QLDT_API_URL =
-    import.meta.env.VITE_QLDT_API_URL || "http://localhost:8081";
-  private readonly AUTH_BASE_URL =
-    import.meta.env.VITE_AUTH_URL || "https://api.learnsql.store/api/auth/";
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+  private readonly AUTH_API_URL =
+    import.meta.env.VITE_AUTH_URL || "https://api.learnsql.store/api/auth";
 
   /**
-   * Đăng ký tài khoản mới
+   * Decode Google ID Token để lấy thông tin user
    */
-  async register(
-    data: Omit<RegisterData, "serviceTypes">
-  ): Promise<RegisterResponse> {
-    // Check if we should use mock or real API
-    const useMock =
-      import.meta.env.VITE_USE_MOCK_AUTH === "true" || import.meta.env.DEV; // Use mock in development by default
-
-    if (useMock) {
-      console.log("🔧 Using mock registration API (CORS workaround)");
-      return this.mockRegister(data);
-    }
-
+  private decodeGoogleIdToken(idToken: string): {
+    email?: string;
+    name?: string;
+    picture?: string;
+    sub?: string;
+  } {
     try {
-      const registerPayload: RegisterData = {
-        ...data,
-        serviceTypes: ["QUIZ", "CLASSROOM"], // Hardcoded as requested
-      };
-
-      const response = await fetch(`${this.AUTH_BASE_URL}register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(registerPayload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Đăng ký thất bại");
+      // Google ID Token có format: header.payload.signature
+      const parts = idToken.split(".");
+      if (parts.length !== 3) {
+        throw new Error("Invalid ID token format");
       }
 
-      const result: RegisterResponse = await response.json();
-      return result;
+      // Decode payload (base64url)
+      const payload = parts[1];
+      // Thêm padding nếu cần
+      const paddedPayload =
+        payload + "=".repeat((4 - (payload.length % 4)) % 4);
+      const decodedPayload = atob(
+        paddedPayload.replace(/-/g, "+").replace(/_/g, "/")
+      );
+
+      return JSON.parse(decodedPayload);
     } catch (error) {
-      console.error("❌ Registration failed:", error);
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error("Có lỗi xảy ra khi đăng ký");
+      console.error("❌ Failed to decode Google ID token:", error);
+      return {};
     }
   }
 
   /**
-   * Đăng nhập bằng email/password
+   * Đăng ký tài khoản mới
+   */
+  async register(registerData: RegisterRequest): Promise<RegisterResponse> {
+    try {
+      console.log("🚀 Registering user:", registerData);
+
+      const response = await fetch(`${this.AUTH_API_URL}/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(registerData),
+      });
+
+      console.log("📡 Registration response status:", response.status);
+
+      if (!response.ok) {
+        let errorMessage = "Đăng ký thất bại";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.error("❌ Registration error data:", errorData);
+        } catch (parseError) {
+          console.error("❌ Failed to parse error response:", parseError);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data: RegisterResponse = await response.json();
+      console.log("✅ Registration successful:", data);
+
+      return data;
+    } catch (error) {
+      console.error("❌ Registration failed:", error);
+
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng."
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Đăng nhập bằng username/password (API mới)
+   */
+  async login(credentials: LoginRequest): Promise<LoginResponse> {
+    try {
+      console.log("🚀 Logging in user:", credentials.username);
+
+      const response = await fetch(`${this.AUTH_API_URL}/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(credentials),
+      });
+
+      console.log("📡 Login response status:", response.status);
+
+      if (!response.ok) {
+        let errorMessage = "Đăng nhập thất bại";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.error("❌ Login error data:", errorData);
+        } catch (parseError) {
+          console.error("❌ Failed to parse error response:", parseError);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data: LoginResponse = await response.json();
+      console.log("✅ Login successful:", {
+        status: data.status,
+        hasTokens: !!(data.accessToken && data.refreshToken),
+      });
+
+      // Lưu tokens nếu đăng nhập thành công
+      if (data.status === 1 && data.accessToken && data.refreshToken) {
+        tokenService.setTokens({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          expiresIn: 3600, // Default 1 hour, có thể adjust
+          tokenType: "Bearer",
+        });
+        console.log("💾 Tokens saved successfully");
+      }
+
+      return data;
+    } catch (error) {
+      console.error("❌ Login failed:", error);
+
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng."
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Đăng nhập bằng email/password (API cũ)
    */
   async loginWithEmail(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
@@ -123,33 +229,88 @@ class AuthService {
   /**
    * Đăng nhập bằng Google
    */
-  async loginWithGoogle(credential: string): Promise<AuthResponse> {
+  async loginWithGoogle(idToken: string): Promise<AuthResponse> {
     try {
-      const response = await fetch(`${this.API_BASE_URL}/auth/google`, {
+      console.log("🚀 Logging in with Google...");
+
+      // Decode ID token để lấy thông tin user
+      const googleUser = this.decodeGoogleIdToken(idToken);
+      console.log("👤 Google user info:", {
+        email: googleUser.email,
+        name: googleUser.name,
+        sub: googleUser.sub,
+      });
+
+      const response = await fetch(`${this.AUTH_API_URL}/google`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          credential,
+          idToken,
+          serviceTypes: ["QUIZ", "CLASSROOM"], // Hardcoded theo yêu cầu
         }),
       });
 
+      console.log("📡 Google login response status:", response.status);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Đăng nhập Google thất bại");
+        let errorMessage = "Đăng nhập Google thất bại";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.error("❌ Google login error data:", errorData);
+        } catch (parseError) {
+          console.error("❌ Failed to parse error response:", parseError);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
-      const data: AuthResponse = await response.json();
+      const data = await response.json();
+      console.log("✅ Google login successful:", {
+        status: data.status,
+        hasTokens: !!(data.accessToken && data.refreshToken),
+      });
 
-      // Lưu tokens
-      if (data.success && data.tokens) {
-        tokenService.setTokens(data.tokens);
+      // Kiểm tra response format theo API spec
+      if (data.status === 1 && data.accessToken && data.refreshToken) {
+        // Tạo response format chuẩn với thông tin từ Google
+        const authResponse: AuthResponse = {
+          success: true,
+          user: {
+            id: googleUser.sub || `google-${Date.now()}`,
+            email: googleUser.email || "user@gmail.com",
+            name: googleUser.name || "Google User",
+            avatar: googleUser.picture,
+            role: "student",
+          },
+          tokens: {
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+            expiresIn: 3600, // Default 1 hour, có thể điều chỉnh
+            tokenType: "Bearer",
+          },
+        };
+
+        // Lưu tokens
+        tokenService.setTokens(authResponse.tokens);
+        console.log("💾 Google tokens saved successfully");
+
+        return authResponse;
+      } else {
+        throw new Error("Đăng nhập Google thất bại - Response không hợp lệ");
       }
-
-      return data;
     } catch (error) {
       console.error("❌ Google login failed:", error);
+
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng."
+        );
+      }
+
       throw error;
     }
   }
@@ -159,7 +320,7 @@ class AuthService {
    */
   async loginWithQLDT(credentials: QLDTCredentials): Promise<QLDTAuthResponse> {
     try {
-      const response = await fetch(`${this.QLDT_API_URL}/auth/qldt-login`, {
+      const response = await fetch(`${this.API_BASE_URL}/ptit-login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,14 +336,38 @@ class AuthService {
         throw new Error(errorData.message || "Đăng nhập QLDT thất bại");
       }
 
-      const data: QLDTAuthResponse = await response.json();
+      const data = await response.json();
 
-      // Lưu tokens
-      if (data.success && data.tokens) {
-        tokenService.setTokens(data.tokens);
+      // Kiểm tra response format theo API spec
+      if (data.status === 1 && data.accessToken && data.refreshToken) {
+        // Tạo response format chuẩn
+        const authResponse: QLDTAuthResponse = {
+          success: true,
+          user: {
+            id: `qldt-${credentials.username}`,
+            username: credentials.username,
+            name: "Sinh viên PTIT", // Có thể lấy từ API khác nếu cần
+            studentId: credentials.username,
+            class: "Unknown", // Có thể lấy từ API khác nếu cần
+            email: `${credentials.username}@stu.ptit.edu.vn`,
+          },
+          tokens: {
+            accessToken: data.accessToken,
+            refreshToken: data.refreshToken,
+            expiresIn: 3600, // Default 1 hour, có thể điều chỉnh
+            tokenType: "Bearer",
+          },
+        };
+
+        // Lưu tokens
+        tokenService.setTokens(authResponse.tokens);
+
+        return authResponse;
+      } else {
+        throw new Error(
+          "Đăng nhập QLDT thất bại - Sai tài khoản hoặc mật khẩu"
+        );
       }
-
-      return data;
     } catch (error) {
       console.error("❌ QLDT login failed:", error);
       throw error;
@@ -260,10 +445,16 @@ class AuthService {
     }
   }
 
-  /**
-   * Lấy thông tin user hiện tại
-   */
-  async getCurrentUser(): Promise<any> {
+  async getCurrentUser(): Promise<{
+    id: string;
+    email: string;
+    name: string;
+    avatar?: string;
+    role: string;
+    studentId?: string;
+    class?: string;
+    semester?: string;
+  }> {
     try {
       const accessToken = tokenService.getAccessToken();
 
@@ -348,33 +539,6 @@ class AuthService {
   }
 
   /**
-   * Mock Google login
-   */
-  async mockGoogleLogin(credential: string): Promise<AuthResponse> {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    const mockResponse: AuthResponse = {
-      success: true,
-      user: {
-        id: "google-user-123",
-        email: "user@gmail.com",
-        name: "Google User",
-        avatar: "https://lh3.googleusercontent.com/a/default-user",
-        role: "student",
-      },
-      tokens: {
-        accessToken: "mock-google-access-token-" + Date.now(),
-        refreshToken: "mock-google-refresh-token-" + Date.now(),
-        expiresIn: 3600,
-        tokenType: "Bearer",
-      },
-    };
-
-    tokenService.setTokens(mockResponse.tokens);
-    return mockResponse;
-  }
-
-  /**
    * Mock QLDT login
    */
   async mockQLDTLogin(credentials: QLDTCredentials): Promise<QLDTAuthResponse> {
@@ -403,110 +567,164 @@ class AuthService {
   }
 
   /**
-   * Mock register for development
+   * Validate registration data
    */
-  async mockRegister(
-    data: Omit<RegisterData, "serviceTypes">
-  ): Promise<RegisterResponse> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+  validateRegistrationData(data: RegisterRequest): string[] {
+    const errors: string[] = [];
 
-    // Simulate some validation errors for testing
-    if (data.email === "test@error.com") {
-      throw new Error("Email đã được sử dụng");
+    if (!data.username || data.username.trim().length < 3) {
+      errors.push("Username phải có ít nhất 3 ký tự");
     }
 
-    if (data.username === "admin") {
-      throw new Error("Tên đăng nhập không được phép");
+    if (!data.password || data.password.length < 6) {
+      errors.push("Password phải có ít nhất 6 ký tự");
     }
 
-    // Mock successful response
-    const mockResponse: RegisterResponse = {
-      status: 1,
-      message: "Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.",
-    };
+    if (!data.firstName || data.firstName.trim().length === 0) {
+      errors.push("Họ không được để trống");
+    }
 
-    console.log("✅ Mock registration successful:", {
-      username: data.username,
-      email: data.email,
-      firstName: data.firstName,
-      lastName: data.lastName,
-      phone: data.phone,
-      birthDay: data.birthDay,
-      serviceTypes: ["QUIZ", "CLASSROOM"],
-    });
+    if (!data.lastName || data.lastName.trim().length === 0) {
+      errors.push("Tên không được để trống");
+    }
 
-    return mockResponse;
+    if (!data.email || !this.isValidEmail(data.email)) {
+      errors.push("Email không hợp lệ");
+    }
+
+    if (!data.phone || !this.isValidPhone(data.phone)) {
+      errors.push("Số điện thoại không hợp lệ");
+    }
+
+    if (!data.birthDay || !this.isValidDate(data.birthDay)) {
+      errors.push("Ngày sinh không hợp lệ (định dạng: yyyy-MM-dd)");
+    }
+
+    if (!data.serviceTypes || data.serviceTypes.length === 0) {
+      errors.push("Phải chọn ít nhất một dịch vụ");
+    }
+
+    return errors;
   }
 
   /**
-   * Validation methods for registration
+   * Validate email format
    */
-
-  // Validate email format
-  validateEmail(email: string): boolean {
+  isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }
 
-  // Validate phone format (Vietnamese phone numbers)
-  validatePhone(phone: string): boolean {
-    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
-    return phoneRegex.test(phone);
+  /**
+   * Validate phone format (Vietnamese phone numbers)
+   */
+  isValidPhone(phone: string): boolean {
+    const phoneRegex = /^(\+84|84|0)[3|5|7|8|9][0-9]{8}$/;
+    return phoneRegex.test(phone.replace(/\s/g, ""));
   }
 
-  // Validate password strength
-  validatePassword(password: string): { isValid: boolean; message?: string } {
-    if (password.length < 6) {
-      return { isValid: false, message: "Mật khẩu phải có ít nhất 6 ký tự" };
-    }
-    if (!/(?=.*[a-z])/.test(password)) {
-      return {
-        isValid: false,
-        message: "Mật khẩu phải có ít nhất 1 chữ thường",
-      };
-    }
-    if (!/(?=.*[A-Z])/.test(password)) {
-      return { isValid: false, message: "Mật khẩu phải có ít nhất 1 chữ hoa" };
-    }
-    if (!/(?=.*\d)/.test(password)) {
-      return { isValid: false, message: "Mật khẩu phải có ít nhất 1 số" };
-    }
-    return { isValid: true };
+  /**
+   * Validate date format (yyyy-MM-dd)
+   */
+  isValidDate(dateString: string): boolean {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(dateString)) return false;
+
+    const date = new Date(dateString);
+    const today = new Date();
+
+    // Check if date is valid and not in the future
+    return date instanceof Date && !isNaN(date.getTime()) && date <= today;
   }
 
-  // Format date for API (YYYY-MM-DD)
+  /**
+   * Format date for API (convert from Date to yyyy-MM-dd string)
+   */
   formatDateForAPI(date: Date): string {
     return date.toISOString().split("T")[0];
   }
 
-  // Parse date from input (YYYY-MM-DD)
-  parseDateFromInput(dateString: string): Date | null {
-    if (!dateString) return null;
-    const date = new Date(dateString);
-    return isNaN(date.getTime()) ? null : date;
+  /**
+   * Get available service types
+   */
+  getAvailableServiceTypes(): { value: string; label: string }[] {
+    return [
+      { value: "QUIZ", label: "Hệ thống Quiz" },
+      { value: "CLASSROOM", label: "Lớp học trực tuyến" },
+      { value: "ASSIGNMENT", label: "Quản lý bài tập" },
+      { value: "EXAM", label: "Thi trực tuyến" },
+    ];
   }
 
-  // Validate age (must be at least 13 years old)
-  validateAge(birthDate: string): { isValid: boolean; message?: string } {
-    const birth = new Date(birthDate);
+  /**
+   * Validate password strength
+   */
+  validatePassword(password: string): { isValid: boolean; message?: string } {
+    if (!password) {
+      return { isValid: false, message: "Mật khẩu không được để trống" };
+    }
+
+    if (password.length < 6) {
+      return { isValid: false, message: "Mật khẩu phải có ít nhất 6 ký tự" };
+    }
+
+    // Check for at least one letter and one number
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+
+    if (!hasLetter || !hasNumber) {
+      return {
+        isValid: false,
+        message: "Mật khẩu phải chứa ít nhất 1 chữ cái và 1 số",
+      };
+    }
+
+    return { isValid: true };
+  }
+
+  /**
+   * Validate age based on birth date
+   */
+  validateAge(birthDay: string): { isValid: boolean; message?: string } {
+    if (!birthDay) {
+      return { isValid: false, message: "Ngày sinh không được để trống" };
+    }
+
+    const birthDate = new Date(birthDay);
     const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
+
+    // Check if date is valid
+    if (isNaN(birthDate.getTime())) {
+      return { isValid: false, message: "Ngày sinh không hợp lệ" };
+    }
+
+    // Check if birth date is not in the future
+    if (birthDate > today) {
+      return {
+        isValid: false,
+        message: "Ngày sinh không thể là ngày trong tương lai",
+      };
+    }
+
+    // Calculate age
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
 
     if (
       monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birth.getDate())
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
     ) {
       age--;
     }
 
+    // Check minimum age (13 years old)
     if (age < 13) {
       return { isValid: false, message: "Bạn phải ít nhất 13 tuổi để đăng ký" };
     }
 
-    if (age > 100) {
-      return { isValid: false, message: "Vui lòng kiểm tra lại ngày sinh" };
+    // Check maximum age (reasonable limit)
+    if (age > 120) {
+      return { isValid: false, message: "Ngày sinh không hợp lệ" };
     }
 
     return { isValid: true };

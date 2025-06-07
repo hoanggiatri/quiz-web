@@ -20,9 +20,7 @@ import {
   Send,
   ChevronLeft,
   ChevronRight,
-  FileText,
-  MapPin
-} from "lucide-react";
+  FileText} from "lucide-react";
 
 // Demo data - 20 questions
 const DEMO_QUIZ_DATA = {

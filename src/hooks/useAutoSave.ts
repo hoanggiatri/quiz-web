@@ -87,7 +87,7 @@ export const useAutoSave = ({
       if (saved) {
         const data = JSON.parse(saved);
         const changes = new Map(Object.entries(data.changes));
-        setLocalChanges(changes);
+        setLocalChanges(changes as Map<string, AutoSaveData>);
         sessionDataRef.current = data.sessionData || sessionDataRef.current;
         return { changes, sessionData: data.sessionData };
       }

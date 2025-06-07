@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Flag, CheckCircle, Circle } from "lucide-react";
+import { Flag, CheckCircle } from "lucide-react";
 import type { QuestionStatus } from "@/types/quiz";
 import "./style.css";
 

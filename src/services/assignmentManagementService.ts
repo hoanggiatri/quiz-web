@@ -4,7 +4,6 @@ import type {
   AssignmentSearchParams,
   AssignmentResult,
   AssignmentApiResponse,
-  AssignmentDetailApiResponse,
 } from "@/types/assignment";
 import {
   transformApiResponseToAssignment,
@@ -239,7 +238,7 @@ export const assignmentManagementService = {
     // Apply sorting
     if (params.sortBy) {
       filteredAssignments.sort((a, b) => {
-        let aValue: any, bValue: any;
+        let aValue: string | Date | number, bValue: string | Date | number;
 
         switch (params.sortBy) {
           case "title":
@@ -347,10 +346,7 @@ export const assignmentManagementService = {
   },
 
   // Nộp assignment
-  submitAssignment: async (
-    id: string,
-    answers: any
-  ): Promise<AssignmentResult> => {
+  submitAssignment: async (id: string): Promise<AssignmentResult> => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     // Mock result calculation

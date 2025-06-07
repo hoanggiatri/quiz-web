@@ -1,8 +1,9 @@
-import { Area, AreaChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { Area, AreaChart, XAxis, YAxis, CartesianGrid } from "recharts"
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  type ChartConfig,
 } from "@/components/ui/chart"
 
 const data = [

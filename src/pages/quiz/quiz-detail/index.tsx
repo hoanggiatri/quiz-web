@@ -6,7 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Progress } from "@/components/ui/progress";
 import {
   BookOpen,
   Play,
@@ -17,13 +16,7 @@ import {
   Calendar,
   User,
   AlertTriangle,
-  CheckCircle,
-  XCircle,
-  Timer,
-  Target,
-  Star,
   Info,
-  Shield,
   FileText,
   Zap,
   TrendingUp,
@@ -32,36 +25,10 @@ import {
   Share2
 } from "lucide-react";
 import { quizService, type PublicQuiz } from "@/services/quizService";
-import { useUserContext } from "@/contexts/UserContext";
 import "@/styles/quiz-shared.css";
 import "./style.css";
 
 // Demo quiz data for better showcase
-const DEMO_QUIZ_DETAIL = {
-  examQuizzesId: "demo-1",
-  title: "Kiểm tra Toán học - Đại số và Hình học",
-  code: "MATH2024",
-  createdBy: "Thầy Nguyễn Văn A",
-  startTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-  totalQuestions: 25,
-  classesId: "class-1",
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  questions: [],
-  duration: 90,
-  description: "Bài kiểm tra tổng hợp về đại số và hình học cho học sinh lớp 12. Bài thi bao gồm các chủ đề: phương trình, bất phương trình, hàm số, hình học không gian và hình học phẳng.",
-  difficulty: "Trung bình",
-  passingScore: 70,
-  maxAttempts: 1,
-  instructions: [
-    "Đọc kỹ đề bài trước khi trả lời",
-    "Mỗi câu hỏi chỉ có một đáp án đúng",
-    "Không được sử dụng tài liệu tham khảo",
-    "Thời gian làm bài là 90 phút",
-    "Bài thi sẽ tự động nộp khi hết thời gian"
-  ]
-};
 
 export default function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -129,40 +96,6 @@ export default function QuizDetailPage() {
     return 'available';
   };
 
-  const getStatusInfo = () => {
-    const status = getQuizStatus();
-
-    switch (status) {
-      case 'upcoming':
-        return {
-          icon: <Clock className="w-5 h-5 text-blue-500" />,
-          text: 'Sắp diễn ra',
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-50 border-blue-200'
-        };
-      case 'expired':
-        return {
-          icon: <XCircle className="w-5 h-5 text-red-500" />,
-          text: 'Đã kết thúc',
-          color: 'text-red-600',
-          bgColor: 'bg-red-50 border-red-200'
-        };
-      case 'available':
-        return {
-          icon: <CheckCircle className="w-5 h-5 text-green-500" />,
-          text: 'Đang mở',
-          color: 'text-green-600',
-          bgColor: 'bg-green-50 border-green-200'
-        };
-      default:
-        return {
-          icon: <AlertTriangle className="w-5 h-5 text-gray-500" />,
-          text: 'Không xác định',
-          color: 'text-gray-600',
-          bgColor: 'bg-gray-50 border-gray-200'
-        };
-    }
-  };
 
   const handleStartQuiz = async () => {
     if (!quiz || !isQuizAvailable() || !userId) return;
@@ -277,7 +210,6 @@ export default function QuizDetailPage() {
     );
   }
 
-  const statusInfo = getStatusInfo();
   const available = isQuizAvailable();
 
   return (

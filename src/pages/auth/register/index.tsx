@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { 
   AlertCircle, 
@@ -22,7 +21,7 @@ import {
   TrendingUp,
   CheckCircle
 } from "lucide-react";
-import { authService, type RegisterData } from "@/services/authService";
+import { authService } from "@/services/authService";
 import "./styles.css";
 
 interface RegisterFormData {
@@ -80,13 +79,13 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
       case "email":
         if (!value.trim()) {
           error = "Email không được để trống";
-        } else if (!authService.validateEmail(value)) {
+        } else if (!authService.isValidEmail(value)) {
           error = "Email không hợp lệ";
         }
         break;
 
       case "password":
-        const passwordValidation = authService.validatePassword(value);
+        { const passwordValidation = authService.validatePassword(value);
         if (!passwordValidation.isValid) {
           error = passwordValidation.message || "Mật khẩu không hợp lệ";
         }
@@ -107,7 +106,7 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
         } else {
           setPasswordStrength(null);
         }
-        break;
+        break; }
 
       case "confirmPassword":
         if (value !== formData.password) {
@@ -127,7 +126,7 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
       case "phone":
         if (!value.trim()) {
           error = "Số điện thoại không được để trống";
-        } else if (!authService.validatePhone(value)) {
+        } else if (!authService.isValidPhone(value)) {
           error = "Số điện thoại không hợp lệ (VD: 0987654321)";
         }
         break;
@@ -173,7 +172,6 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
 
   const validateForm = (): boolean => {
     let isValid = true;
-    const errors: Partial<RegisterFormData> = {};
 
     // Validate all fields
     Object.keys(formData).forEach(key => {
@@ -200,14 +198,15 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
     setError(null);
 
     try {
-      const registerData: Omit<RegisterData, 'serviceTypes'> = {
+      const registerData = {
         username: formData.username,
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         phone: formData.phone,
-        birthDay: formData.birthDay
+        birthDay: formData.birthDay,
+        serviceTypes: ['QUIZ', 'CLASSROOM'] // Default service types as mentioned in memories
       };
 
       const response = await authService.register(registerData);
@@ -280,12 +279,12 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
               </p>
             </div>
 
-            {/* Development Notice */}
+            {/* API Status Notice */}
             {import.meta.env.DEV && (
-              <Alert className="mb-3 border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-xs text-blue-700 dark:text-blue-300">
-                  🔧 Development mode: Using mock API due to CORS restrictions
+              <Alert className="mb-3 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+                <AlertCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-xs text-green-700 dark:text-green-300">
+                  🌐 Connecting to: {import.meta.env.VITE_AUTH_URL || 'https://api.learnsql.store/api/auth'}
                 </AlertDescription>
               </Alert>
             )}

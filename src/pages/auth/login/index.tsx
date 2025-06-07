@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,7 +20,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import QLDTLoginModal from "@/components/auth/QLDTLoginModal";
-import type { LoginCredentials, QLDTCredentials } from "@/types/auth";
+import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
+import type { QLDTCredentials } from "@/types/auth";
+import { authService, type LoginRequest } from "@/services/authService";
 import "./styles.css";
 
 interface LoginPageProps {
@@ -29,13 +30,13 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
-  const { login, loginWithGoogle, loginWithQLDT, isLoading } = useAuth();
+  const { loginWithGoogle, loginWithQLDT, isLoading } = useAuth();
   
-  // Form states
-  const [credentials, setCredentials] = useState<LoginCredentials>({
-    email: "",
-    password: "",
-    rememberMe: false
+
+  // New API credentials
+  const [newCredentials, setNewCredentials] = useState<LoginRequest>({
+    username: "",
+    password: ""
   });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,32 +49,42 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
   useEffect(() => {
   });
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+
+  // New login method using username/password API
+  const handleUsernameLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!credentials.email || !credentials.password) {
-      setError("Vui lòng nhập đầy đủ email và mật khẩu");
+
+    if (!newCredentials.username || !newCredentials.password) {
+      setError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu");
       return;
     }
-    
+
     setError(null);
-    
+
     try {
-      await login(credentials);
-      if (onLoginSuccess) {
-        onLoginSuccess();
+      const response = await authService.login(newCredentials);
+
+      if (response.status === 1) {
+        console.log("✅ Login successful, redirecting...");
+        if (onLoginSuccess) {
+          onLoginSuccess();
+        } else {
+          // Redirect to dashboard
+          window.location.href = '/';
+        }
+      } else {
+        throw new Error("Đăng nhập thất bại");
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : "Đăng nhập thất bại");
     }
   };
 
-  const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async (credential: string) => {
     setError(null);
-    
+
     try {
-      // In production, this would integrate with Google OAuth
-      await loginWithGoogle("mock-google-credential");
+      await loginWithGoogle(credential);
       if (onLoginSuccess) {
         onLoginSuccess();
       }
@@ -82,15 +93,15 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     }
   };
 
+  const handleGoogleError = (error: Error) => {
+    setError(error.message);
+  };
+
   const handleQLDTLogin = async (qldt: QLDTCredentials) => {
-    try {
       await loginWithQLDT(qldt);
       if (onLoginSuccess) {
         onLoginSuccess();
       }
-    } catch (error) {
-      throw error; // Let modal handle the error
-    }
   };
 
   return (
@@ -120,6 +131,16 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                 </p>
               </div>
 
+              {/* API Status Notice */}
+              {import.meta.env.DEV && (
+                <Alert className="mb-4 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
+                  <AlertCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-xs text-green-700 dark:text-green-300">
+                    🌐 Connecting to: {import.meta.env.VITE_AUTH_URL || 'https://api.learnsql.store/api/auth'}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Error Alert */}
               {error && (
                 <Alert variant="destructive" className="mb-6">
@@ -130,21 +151,12 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
               {/* Social Login Buttons */}
               <div className="space-y-3 mb-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full h-12 text-sm font-medium border-2 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
-                  onClick={handleGoogleLogin}
+                <GoogleLoginButton
+                  onSuccess={handleGoogleLogin}
+                  onError={handleGoogleError}
                   disabled={isLoading}
-                >
-                  <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                  </svg>
-                  Đăng nhập với Google
-                </Button>
+                  loading={isLoading}
+                />
 
                 <Button
                   type="button"
@@ -162,27 +174,27 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
               <div className="relative mb-6">
                 <Separator />
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 px-4 text-sm text-gray-500">
-                  Hoặc đăng nhập với email
+                  Hoặc đăng nhập với tài khoản
                 </span>
               </div>
 
-              {/* Email Login Form */}
-              <form onSubmit={handleEmailLogin} className="space-y-4">
+              {/* Username Login Form */}
+              <form onSubmit={handleUsernameLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">
-                    Email
+                  <Label htmlFor="username" className="text-sm font-medium">
+                    Tên đăng nhập
                   </Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="email"
-                      type="email"
-                      placeholder="Nhập email của bạn"
-                      value={credentials.email}
-                      onChange={(e) => setCredentials(prev => ({ ...prev, email: e.target.value }))}
+                      id="username"
+                      type="text"
+                      placeholder="Nhập tên đăng nhập"
+                      value={newCredentials.username}
+                      onChange={(e) => setNewCredentials(prev => ({ ...prev, username: e.target.value }))}
                       disabled={isLoading}
                       className="pl-10 h-12"
-                      autoComplete="email"
+                      autoComplete="username"
                     />
                   </div>
                 </div>
@@ -197,8 +209,8 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                       id="password"
                       type={showPassword ? "text" : "password"}
                       placeholder="Nhập mật khẩu"
-                      value={credentials.password}
-                      onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
+                      value={newCredentials.password}
+                      onChange={(e) => setNewCredentials(prev => ({ ...prev, password: e.target.value }))}
                       disabled={isLoading}
                       className="pl-10 pr-10 h-12"
                       autoComplete="current-password"
@@ -213,19 +225,7 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={credentials.rememberMe}
-                      onCheckedChange={(checked) => 
-                        setCredentials(prev => ({ ...prev, rememberMe: checked === true }))
-                      }
-                    />
-                    <Label htmlFor="remember" className="text-sm">
-                      Ghi nhớ đăng nhập
-                    </Label>
-                  </div>
+                <div className="flex items-center justify-end">
                   <a href="#" className="text-sm text-primary hover:underline">
                     Quên mật khẩu?
                   </a>

@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { QuestionMap } from "@/components/quiz/QuestionMap/QuestionMap";
-import { cn } from "@/lib/utils";
 import type { QuestionStatus } from "@/types/quiz";
 import "@/styles/quiz-shared.css";
 import "./style.css";
@@ -24,9 +23,7 @@ import {
   Send,
   ChevronLeft,
   ChevronRight,
-  X,
-  FileText
-} from "lucide-react";
+  X} from "lucide-react";
 import { quizService } from "@/services/quizService";
 import { quizSubmissionService } from "@/services/quizSubmissionService";
 import type {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,34 +14,15 @@ import {
   AlertTriangle,
   Calendar,
   User,
-  Clock,
   Search,
   Grid3X3,
   List,
   Eye,
   ChevronLeft,
-  ChevronRight,
-  Award,
-  Target
-} from "lucide-react";
+  ChevronRight} from "lucide-react";
 import { quizService, type PublicQuiz } from "@/services/quizService";
 import "@/styles/quiz-shared.css";
 import "./style.css";
-
-// Local interfaces for search and pagination
-interface QuizFilters {
-  status?: 'all' | 'available' | 'upcoming' | 'expired';
-}
-
-interface SearchParams {
-  query?: string;
-  filters?: QuizFilters;
-  sortBy?: 'newest' | 'oldest' | 'title' | 'questions' | 'startTime';
-  sortOrder?: 'asc' | 'desc';
-  page?: number;
-  limit?: number;
-}
-
 
 
 export default function QuizListPage() {
@@ -81,9 +62,6 @@ export default function QuizListPage() {
     return 'available';
   };
 
-  const isQuizAvailable = (quiz: PublicQuiz): boolean => {
-    return getQuizStatus(quiz) === 'available';
-  };
 
   const getStatusBadge = (quiz: PublicQuiz) => {
     const status = getQuizStatus(quiz);
@@ -373,8 +351,6 @@ export default function QuizListPage() {
           {/* Quiz List */}
           <div className={`gap-6 ${viewMode === "grid" ? "grid md:grid-cols-2 lg:grid-cols-3" : "flex flex-col"}`}>
             {paginatedQuizzes.map((quiz) => {
-              const status = getQuizStatus(quiz);
-              const available = isQuizAvailable(quiz);
 
               return (
                 <Card key={quiz.examQuizzesId} className="hover:shadow-lg transition-shadow">
