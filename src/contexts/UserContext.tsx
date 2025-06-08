@@ -1,17 +1,24 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 
+// UserContext interface - simplified version of AuthUser
 interface User {
   id: string;
   name: string;
   email: string;
+  username: string;
   role: 'student' | 'teacher' | 'admin';
+  studentId?: string;
+  class?: string;
+  avatar?: string;
 }
 
 interface UserContextType {
   user: User | null;
   setUser: (user: User | null) => void;
   userId: string | null;
+  isLoading: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -29,13 +36,39 @@ interface UserProviderProps {
 }
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  // Mock user data - trong thực tế sẽ lấy từ authentication
-  const [user, setUser] = useState<User | null>({
-    id: '3fa85f64-5717-4562-b3fc-2c963f66afa6', // Mock userId từ API example
-    name: 'Nguyễn Văn A',
-    email: 'student@example.com',
-    role: 'student'
-  });
+  const { user: authUser, isAuthenticated, isLoading: authLoading } = useAuth();
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Sync user data from AuthContext
+  useEffect(() => {
+    setIsLoading(authLoading);
+
+    if (isAuthenticated && authUser) {
+      // Convert AuthUser to UserContext User format
+      const userData: User = {
+        id: authUser.id,
+        name: authUser.name || authUser.username || 'User',
+        email: authUser.email,
+        username: authUser.username,
+        role: authUser.role as 'student' | 'teacher' | 'admin',
+        studentId: authUser.studentId,
+        class: authUser.class,
+        avatar: authUser.avatar
+      };
+
+      setUser(userData);
+      console.log('🔄 UserContext synced with AuthContext:', {
+        id: userData.id,
+        username: userData.username,
+        email: userData.email,
+        role: userData.role
+      });
+    } else {
+      setUser(null);
+      console.log('🔄 UserContext cleared - user not authenticated');
+    }
+  }, [authUser, isAuthenticated, authLoading]);
 
   const userId = user?.id || null;
 
@@ -43,6 +76,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     user,
     setUser,
     userId,
+    isLoading,
   };
 
   return (

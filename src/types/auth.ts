@@ -5,6 +5,11 @@ export interface LoginCredentials {
   rememberMe?: boolean;
 }
 
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
 export interface QLDTCredentials {
   username: string;
   password: string;
@@ -20,12 +25,19 @@ export interface AuthTokens {
 export interface User {
   id: string;
   email: string;
-  name: string;
+  username: string;
+  name?: string;
   avatar?: string;
   role: string;
   studentId?: string;
   class?: string;
   semester?: string;
+}
+
+export interface LoginResponse {
+  status: number;
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface AuthResponse {
@@ -54,7 +66,7 @@ export interface QLDTAuthResponse {
   message?: string;
 }
 
-export type LoginProvider = 'email' | 'google' | 'qldt';
+export type LoginProvider = "email" | "google" | "qldt";
 
 export interface LoginState {
   isLoading: boolean;
@@ -77,7 +89,8 @@ export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (credentials: LoginCredentials) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<void>;
+  loginWithEmail: (credentials: LoginCredentials) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   loginWithQLDT: (credentials: QLDTCredentials) => Promise<void>;
   logout: () => void;

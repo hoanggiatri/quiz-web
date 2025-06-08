@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,9 +6,100 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, Mail, Phone, MapPin, Calendar, Edit, Save } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  User,
+  Mail,
+  Calendar,
+  Edit,
+  Save,
+  Shield,
+  GraduationCap,
+  Info
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { tokenService } from "@/services/tokenService";
+import { jwtService } from "@/services/jwtService";
 
 export default function UserProfilePage() {
+  const { user, isAuthenticated } = useAuth();
+  const [tokenInfo, setTokenInfo] = useState<any>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Get token info
+  useEffect(() => {
+    const updateTokenInfo = (isInitial: boolean = false) => {
+      const accessToken = tokenService.getAccessToken();
+      if (accessToken) {
+        // Chỉ log lần đầu, không log trong timer
+        const payload = jwtService.getAllClaims(accessToken, !isInitial);
+        console.log("Token info:",payload)
+        const remaining = jwtService.getTokenTimeRemaining(accessToken, true); // Always silent for timer
+        setTokenInfo(payload);
+        setTimeRemaining(remaining);
+      }
+    };
+
+    // Initial load với log
+    updateTokenInfo(true);
+    console.log('USER:::',user)
+    // Timer updates không log
+    const interval = setInterval(() => updateTokenInfo(false), 1000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Get user initials for avatar
+  const getUserInitials = (name?: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map(word => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Format time remaining
+  const formatTime = (seconds: number): string => {
+    if (seconds <= 0) return 'Đã hết hạn';
+
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${secs}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${secs}s`;
+    } else {
+      return `${secs}s`;
+    }
+  };
+
+  // Get role display name
+  const getRoleDisplayName = (role?: string) => {
+    switch (role) {
+      case 'STUDENT': return 'Sinh viên';
+      case 'TEACHER': return 'Giảng viên';
+      case 'ADMIN': return 'Quản trị viên';
+      default: return role || 'Người dùng';
+    }
+  };
+
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Bạn cần đăng nhập để xem thông tin hồ sơ cá nhân.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
@@ -20,41 +112,65 @@ export default function UserProfilePage() {
         <Card className="md:col-span-1">
           <CardHeader className="text-center">
             <Avatar className="h-24 w-24 mx-auto mb-4">
-              <AvatarImage src="https://github.com/shadcn.png" alt="Avatar" />
-              <AvatarFallback>NVA</AvatarFallback>
+              <AvatarImage src={user.avatar || tokenInfo?.picture} alt="Avatar" />
+              <AvatarFallback>{getUserInitials(user.name)}</AvatarFallback>
             </Avatar>
-            <CardTitle>Nguyễn Văn A</CardTitle>
-            <Badge variant="secondary">Sinh viên</Badge>
+            <CardTitle>{user.name}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-muted-foreground" />
-                <span>SV2024001</span>
+                <Info className="w-4 h-4 text-muted-foreground" />
+                <span className="font-mono text-xs">{user.id}</span>
               </div>
+              {user.studentId && (
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                  <span>{user.studentId}</span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-muted-foreground" />
-                <span>student@example.com</span>
+                <span className="truncate">{user.email}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-muted-foreground" />
-                <span>0123456789</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-muted-foreground" />
-                <span>Hà Nội, Việt Nam</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <span>Tham gia: 01/2024</span>
-              </div>
+              {user.class && (
+                <div className="flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-muted-foreground" />
+                  <span>{user.class}</span>
+                </div>
+              )}
+              {tokenInfo?.iat && (
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <span>Đăng nhập: {new Date(tokenInfo.iat * 1000).toLocaleDateString('vi-VN')}</span>
+                </div>
+              )}
             </div>
-            
+
             <Separator className="my-4" />
-            
-            <Button className="w-full">
+
+            {/* Token Status */}
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Phiên đăng nhập:</span>
+                <Badge variant={timeRemaining > 300 ? 'default' : timeRemaining > 0 ? 'destructive' : 'secondary'}>
+                  {formatTime(timeRemaining)}
+                </Badge>
+              </div>
+              {tokenInfo?.exp && (
+                <div className="text-xs text-muted-foreground">
+                  Hết hạn: {new Date(tokenInfo.exp * 1000).toLocaleString('vi-VN')}
+                </div>
+              )}
+            </div>
+
+            <Button
+              className="w-full"
+              variant="outline"
+              onClick={() => setIsEditing(!isEditing)}
+            >
               <Edit className="w-4 h-4 mr-2" />
-              Chỉnh sửa ảnh
+              {isEditing ? 'Hủy chỉnh sửa' : 'Chỉnh sửa thông tin'}
             </Button>
           </CardContent>
         </Card>
@@ -62,56 +178,84 @@ export default function UserProfilePage() {
         {/* Information Form */}
         <Card className="md:col-span-2">
           <CardHeader>
-            <CardTitle>Thông tin cá nhân</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <User className="w-5 h-5" />
+              Thông tin cá nhân
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName">Họ</Label>
-                  <Input id="firstName" defaultValue="Nguyễn Văn" />
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    defaultValue={tokenInfo?.username || user.username || user.id}
+                    disabled
+                  />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Tên</Label>
-                  <Input id="lastName" defaultValue="A" />
-                </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Họ và tên</Label>
+                <Input
+                  id="fullName"
+                  defaultValue={user.name}
+                  disabled={!isEditing}
+                />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue="student@example.com" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="phone">Số điện thoại</Label>
-                <Input id="phone" defaultValue="0123456789" />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="address">Địa chỉ</Label>
-                <Input id="address" defaultValue="Hà Nội, Việt Nam" />
+                <Input
+                  id="email"
+                  type="email"
+                  defaultValue={user.email}
+                  disabled={!isEditing}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="studentId">Mã sinh viên</Label>
-                  <Input id="studentId" defaultValue="SV2024001" disabled />
+                  <Input
+                    id="studentId"
+                    defaultValue={user.studentId || 'N/A'}
+                    disabled
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="class">Lớp</Label>
-                  <Input id="class" defaultValue="CNTT-K19" disabled />
+                  <Input
+                    id="class"
+                    defaultValue={user.class || 'N/A'}
+                    disabled
+                  />
                 </div>
               </div>
 
-              <div className="flex gap-4">
-                <Button type="submit">
-                  <Save className="w-4 h-4 mr-2" />
-                  Lưu thay đổi
-                </Button>
-                <Button type="button" variant="outline">
-                  Hủy
-                </Button>
+              <div className="space-y-2">
+                <Label htmlFor="role">Vai trò</Label>
+                <Input
+                  id="role"
+                  defaultValue={getRoleDisplayName(user.role)}
+                  disabled
+                />
               </div>
+
+              {isEditing && (
+                <div className="flex gap-4">
+                  <Button type="submit">
+                    <Save className="w-4 h-4 mr-2" />
+                    Lưu thay đổi
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
+                  >
+                    Hủy
+                  </Button>
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>

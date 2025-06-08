@@ -1,5 +1,7 @@
 import type {
   LoginCredentials,
+  LoginRequest,
+  LoginResponse,
   QLDTCredentials,
   AuthResponse,
   QLDTAuthResponse,
@@ -23,17 +25,7 @@ export interface RegisterResponse {
   message: string;
 }
 
-// Types for new login API
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  status: number;
-  accessToken: string;
-  refreshToken: string;
-}
+// Types for new login API moved to types/auth.ts
 
 /**
  * Authentication Service
@@ -44,7 +36,7 @@ class AuthService {
   private readonly API_BASE_URL =
     import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
   private readonly AUTH_API_URL =
-    import.meta.env.VITE_AUTH_URL || "https://api.learnsql.store/api/auth";
+    import.meta.env.VITE_AUTH_URL || "https://api.learnsql.store/api/auth/auth";
 
   /**
    * Decode Google ID Token để lấy thông tin user
@@ -281,6 +273,7 @@ class AuthService {
           user: {
             id: googleUser.sub || `google-${Date.now()}`,
             email: googleUser.email || "user@gmail.com",
+            username: googleUser.name || googleUser.email || "google-user",
             name: googleUser.name || "Google User",
             avatar: googleUser.picture,
             role: "student",
@@ -320,10 +313,13 @@ class AuthService {
    */
   async loginWithQLDT(credentials: QLDTCredentials): Promise<QLDTAuthResponse> {
     try {
-      const response = await fetch(`${this.API_BASE_URL}/ptit-login`, {
+      console.log("🚀 Logging in with PTIT QLDT:", credentials.username);
+
+      const response = await fetch(`${this.AUTH_API_URL}/ptit-login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
         body: JSON.stringify({
           username: credentials.username,
@@ -331,12 +327,26 @@ class AuthService {
         }),
       });
 
+      console.log("📡 PTIT login response status:", response.status);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Đăng nhập QLDT thất bại");
+        let errorMessage = "Đăng nhập QLDT PTIT thất bại";
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+          console.error("❌ PTIT login error data:", errorData);
+        } catch (parseError) {
+          console.error("❌ Failed to parse error response:", parseError);
+          errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
+      console.log("✅ PTIT login successful:", {
+        status: data.status,
+        hasTokens: !!(data.accessToken && data.refreshToken),
+      });
 
       // Kiểm tra response format theo API spec
       if (data.status === 1 && data.accessToken && data.refreshToken) {
@@ -344,7 +354,7 @@ class AuthService {
         const authResponse: QLDTAuthResponse = {
           success: true,
           user: {
-            id: `qldt-${credentials.username}`,
+            id: `ptit-${credentials.username}`,
             username: credentials.username,
             name: "Sinh viên PTIT", // Có thể lấy từ API khác nếu cần
             studentId: credentials.username,
@@ -361,15 +371,24 @@ class AuthService {
 
         // Lưu tokens
         tokenService.setTokens(authResponse.tokens);
+        console.log("💾 PTIT tokens saved successfully");
 
         return authResponse;
       } else {
         throw new Error(
-          "Đăng nhập QLDT thất bại - Sai tài khoản hoặc mật khẩu"
+          "Đăng nhập QLDT PTIT thất bại - Sai tài khoản hoặc mật khẩu"
         );
       }
     } catch (error) {
-      console.error("❌ QLDT login failed:", error);
+      console.error("❌ PTIT login failed:", error);
+
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes("fetch")) {
+        throw new Error(
+          "Không thể kết nối đến server PTIT. Vui lòng kiểm tra kết nối mạng."
+        );
+      }
+
       throw error;
     }
   }
@@ -448,6 +467,7 @@ class AuthService {
   async getCurrentUser(): Promise<{
     id: string;
     email: string;
+    username: string;
     name: string;
     avatar?: string;
     role: string;
@@ -502,68 +522,6 @@ class AuthService {
         console.error("❌ Auto refresh failed:", error);
       }
     }
-  }
-
-  /**
-   * Mock login cho development (tạm thời)
-   */
-  async mockLogin(credentials: LoginCredentials): Promise<AuthResponse> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Mock successful response
-    const mockResponse: AuthResponse = {
-      success: true,
-      user: {
-        id: "user-123",
-        email: credentials.email,
-        name: "Nguyễn Văn A",
-        avatar: "https://github.com/shadcn.png",
-        role: "student",
-        studentId: "SV2024001",
-        class: "CNTT-K19",
-        semester: "Học kỳ 2 - 2024-2025",
-      },
-      tokens: {
-        accessToken: "mock-access-token-" + Date.now(),
-        refreshToken: "mock-refresh-token-" + Date.now(),
-        expiresIn: 3600, // 1 hour
-        tokenType: "Bearer",
-      },
-    };
-
-    // Save tokens
-    tokenService.setTokens(mockResponse.tokens);
-
-    return mockResponse;
-  }
-
-  /**
-   * Mock QLDT login
-   */
-  async mockQLDTLogin(credentials: QLDTCredentials): Promise<QLDTAuthResponse> {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const mockResponse: QLDTAuthResponse = {
-      success: true,
-      user: {
-        id: "qldt-user-123",
-        username: credentials.username,
-        name: "Sinh viên PTIT",
-        studentId: "B21DCCN123",
-        class: "D21CQCN01-B",
-        email: credentials.username + "@stu.ptit.edu.vn",
-      },
-      tokens: {
-        accessToken: "mock-qldt-access-token-" + Date.now(),
-        refreshToken: "mock-qldt-refresh-token-" + Date.now(),
-        expiresIn: 3600,
-        tokenType: "Bearer",
-      },
-    };
-
-    tokenService.setTokens(mockResponse.tokens);
-    return mockResponse;
   }
 
   /**

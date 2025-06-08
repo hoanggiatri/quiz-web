@@ -21,8 +21,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import QLDTLoginModal from "@/components/auth/QLDTLoginModal";
 import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
-import type { QLDTCredentials } from "@/types/auth";
-import { authService, type LoginRequest } from "@/services/authService";
+import type { QLDTCredentials, LoginRequest } from "@/types/auth";
 import "./styles.css";
 
 interface LoginPageProps {
@@ -30,7 +29,7 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
-  const { loginWithGoogle, loginWithQLDT, isLoading } = useAuth();
+  const { login, loginWithGoogle, loginWithQLDT, isLoading } = useAuth();
   
 
   // New API credentials
@@ -62,18 +61,13 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     setError(null);
 
     try {
-      const response = await authService.login(newCredentials);
+      await login(newCredentials);
 
-      if (response.status === 1) {
-        console.log("✅ Login successful, redirecting...");
-        if (onLoginSuccess) {
-          onLoginSuccess();
-        } else {
-          // Redirect to dashboard
-          window.location.href = '/';
-        }
+      if (onLoginSuccess) {
+        onLoginSuccess();
       } else {
-        throw new Error("Đăng nhập thất bại");
+        // Redirect to dashboard
+        window.location.href = '/';
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : "Đăng nhập thất bại");
@@ -108,11 +102,9 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
     <>
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
         <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-8 items-center">
-          
           {/* Left Side - Login Form */}
           <div className="w-full max-w-md mx-auto lg:mx-0">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 border-0">
-              
               {/* Logo & Title */}
               <div className="text-center mb-8">
                 <div className="flex items-center justify-center gap-3 mb-4">
@@ -130,16 +122,6 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
                   Đăng nhập để tiếp tục học tập
                 </p>
               </div>
-
-              {/* API Status Notice */}
-              {import.meta.env.DEV && (
-                <Alert className="mb-4 border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950">
-                  <AlertCircle className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-xs text-green-700 dark:text-green-300">
-                    🌐 Connecting to: {import.meta.env.VITE_AUTH_URL || 'https://api.learnsql.store/api/auth'}
-                  </AlertDescription>
-                </Alert>
-              )}
 
               {/* Error Alert */}
               {error && (
@@ -262,7 +244,6 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
           {/* Right Side - Features & Stats */}
           <div className="hidden lg:block">
             <div className="text-center space-y-8">
-
               {/* Hero Image */}
               <div className="relative">
                 <div className="w-96 h-96 mx-auto bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl flex items-center justify-center overflow-hidden">

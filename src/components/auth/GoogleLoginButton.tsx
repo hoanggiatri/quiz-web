@@ -48,7 +48,6 @@ export default function GoogleLoginButton({
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     
     if (!clientId) {
-      console.error('❌ VITE_GOOGLE_CLIENT_ID not configured');
       onError(new Error('Google Client ID not configured'));
       return;
     }
@@ -84,10 +83,8 @@ export default function GoogleLoginButton({
           client_id: clientId,
           callback: (response) => {
             if (response.credential) {
-              console.log('✅ Google sign-in successful');
               onSuccess(response.credential);
             } else {
-              console.error('❌ Google sign-in failed:', response.error);
               onError(new Error(response.error || 'Google sign-in failed'));
             }
           },
@@ -121,7 +118,6 @@ export default function GoogleLoginButton({
     
     // For development, you can use a mock credential
     if (import.meta.env.DEV) {
-      console.log('🔧 Using mock Google credential for development');
       onSuccess('mock-google-credential-' + Date.now());
     } else {
       onError(new Error('Google Sign-In not available'));

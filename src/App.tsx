@@ -8,7 +8,6 @@ import QuizDetailPage from '@/pages/quiz/quiz-detail';
 import QuizTakingPage from '@/pages/quiz/quiz-taking';
 import QuizTakingDemoPage from '@/pages/quiz/quiz-taking-demo';
 import QuizResultPage from '@/pages/quiz/quiz-result';
-import QuizResultDemoPage from '@/pages/quiz/quiz-result-demo';
 import LeaderboardPage from '@/pages/leaderboard';
 import LearningMaterialsPage from '@/pages/learning-materials';
 import NotificationsPage from '@/pages/notifications';
@@ -110,11 +109,11 @@ function AppContent() {
           <Route
             path="/quiz/quiz-taking-demo"
             element={
-              // <ProtectedRoute>
+              <ProtectedRoute>
                 <MainLayout onLogout={logout}>
                   <QuizTakingDemoPage />
                 </MainLayout>
-              // </ProtectedRoute>
+              </ProtectedRoute>
             }
           />
 
@@ -125,18 +124,6 @@ function AppContent() {
               <ProtectedRoute>
                 <MainLayout onLogout={logout}>
                   <QuizResultPage />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Trang demo kết quả bài thi */}
-          <Route
-            path="/quiz/quiz-result-demo"
-            element={
-              <ProtectedRoute>
-                <MainLayout onLogout={logout}>
-                  <QuizResultDemoPage />
                 </MainLayout>
               </ProtectedRoute>
             }
@@ -155,7 +142,7 @@ function AppContent() {
           />
           
           {/* Trang chi tiết bài tập về nhà */}
-          <Route 
+          <Route
             path="/assignment/assignment-detail/:id"
             element={
               <ProtectedRoute>
@@ -163,8 +150,9 @@ function AppContent() {
                   <AssignmentDetailPage />
                 </MainLayout>
               </ProtectedRoute>
-            } 
+            }
           />
+
           
           {/* Trang bảng xếp hạng */}
           <Route 
@@ -191,7 +179,7 @@ function AppContent() {
           />
           
           {/* Trang thông báo */}
-          <Route 
+          <Route
             path="/notifications"
             element={
               <ProtectedRoute>
@@ -199,11 +187,11 @@ function AppContent() {
                   <NotificationsPage />
                 </MainLayout>
               </ProtectedRoute>
-            } 
+            }
           />
-          
+
           {/* Trang hồ sơ cá nhân */}
-          <Route 
+          <Route
             path="/user-profile"
             element={
               <ProtectedRoute>
@@ -211,7 +199,7 @@ function AppContent() {
                   <UserProfilePage />
                 </MainLayout>
               </ProtectedRoute>
-            } 
+            }
           />
         </Routes>
       </BrowserRouter>
