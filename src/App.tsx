@@ -16,6 +16,7 @@ import AssignmentListPage from '@/pages/assignment/assignment-list';
 import AssignmentDetailPage from '@/pages/assignment/assignment-detail';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { UserProvider } from '@/contexts/UserContext';
+import { Toaster } from '@/components/ui/sonner';
 import './App.css';
 import { ThemeProvider } from './components/theme-provider';
 
@@ -213,6 +214,7 @@ function App() {
       <AuthProvider>
         <UserProvider>
           <AppContent />
+          <Toaster />
         </UserProvider>
       </AuthProvider>
     </ThemeProvider>

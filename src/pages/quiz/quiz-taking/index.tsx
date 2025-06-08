@@ -221,15 +221,11 @@ export default function QuizTakingPage() {
   const goToQuestion = (questionIndex: number) => {
     const pageIndex = Math.floor(questionIndex / QUESTIONS_PER_PAGE);
     const questionIndexInPage = questionIndex % QUESTIONS_PER_PAGE;
-    const NAVIGATION_DELAY = 250; // Consistent delay for all navigation
-
-    console.log('goToQuestion:', { questionIndex, pageIndex, questionIndexInPage, currentPage });
+    const NAVIGATION_DELAY = 250;
 
     // Update currentQuestionIndex immediately to fix map highlighting
     setCurrentQuestionIndex(questionIndex);
-
-    // Note: Mobile question map removed in this version
-
+    
     // Helper function to scroll to question and add highlight
     const scrollToQuestionAndHighlight = (element: HTMLElement) => {
       element.scrollIntoView({
@@ -253,14 +249,12 @@ export default function QuizTakingPage() {
     setTimeout(() => {
       // Try to get element by ref first
       const questionElement = questionRefs.current[questionIndexInPage];
-      console.log('Navigation - questionElement:', questionElement, 'delay:', NAVIGATION_DELAY);
 
       if (questionElement) {
         scrollToQuestionAndHighlight(questionElement);
       } else {
         // Fallback: use querySelector with data attribute
         const fallbackElement = document.querySelector(`[data-question-index="${questionIndex}"]`) as HTMLElement;
-        console.log('Fallback element:', fallbackElement);
         if (fallbackElement) {
           scrollToQuestionAndHighlight(fallbackElement);
         } else {
@@ -268,7 +262,6 @@ export default function QuizTakingPage() {
           setTimeout(() => {
             const retryElement = questionRefs.current[questionIndexInPage] ||
                                 document.querySelector(`[data-question-index="${questionIndex}"]`) as HTMLElement;
-            console.log('Retry element:', retryElement);
             if (retryElement) {
               scrollToQuestionAndHighlight(retryElement);
             }
@@ -298,7 +291,6 @@ export default function QuizTakingPage() {
       const result = await quizService.finishSubmission(submissionId);
 
       if (result.status === 200) {
-        console.log('Quiz submitted successfully:', result);
 
         // Create QuizResult object from API response
         const apiData = result.data;
@@ -326,7 +318,6 @@ export default function QuizTakingPage() {
           }))
         };
 
-        console.log('Created quiz result:', quizResult);
 
         // Navigate to result page
         navigate(`/quiz/quiz-result/${submissionId}`, {
@@ -465,7 +456,6 @@ export default function QuizTakingPage() {
                   className="transition-colors duration-200"
                   ref={el => {
                     questionRefs.current[index] = el;
-                    console.log(`Ref set for question ${index}:`, el);
                   }}
                   id={`question-${question.id}`}
                   data-question-index={globalIndex}
@@ -603,6 +593,21 @@ export default function QuizTakingPage() {
                       const newPage = Math.max(0, currentPage - 1);
                       setCurrentPage(newPage);
                       setCurrentQuestionIndex(newPage * QUESTIONS_PER_PAGE);
+                      // Scroll to first question of new page
+                      setTimeout(() => {
+                        const firstQuestionIndex = newPage * QUESTIONS_PER_PAGE;
+                        const firstQuestionElement = questionRefs.current[firstQuestionIndex % QUESTIONS_PER_PAGE];
+                        if (firstQuestionElement) {
+                          firstQuestionElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start',
+                            inline: 'nearest'
+                          });
+                        } else {
+                          // Fallback to top of page
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }, 150);
                     }}
                     disabled={currentPage === 0}
                   >
@@ -625,6 +630,21 @@ export default function QuizTakingPage() {
                       const newPage = Math.min(totalPages - 1, currentPage + 1);
                       setCurrentPage(newPage);
                       setCurrentQuestionIndex(newPage * QUESTIONS_PER_PAGE);
+                      // Scroll to first question of new page
+                      setTimeout(() => {
+                        const firstQuestionIndex = newPage * QUESTIONS_PER_PAGE;
+                        const firstQuestionElement = questionRefs.current[firstQuestionIndex % QUESTIONS_PER_PAGE];
+                        if (firstQuestionElement) {
+                          firstQuestionElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start',
+                            inline: 'nearest'
+                          });
+                        } else {
+                          // Fallback to top of page
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }, 150);
                     }}
                     disabled={currentPage === totalPages - 1}
                   >

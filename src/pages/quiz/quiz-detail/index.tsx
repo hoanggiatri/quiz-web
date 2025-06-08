@@ -103,8 +103,6 @@ export default function QuizDetailPage() {
     try {
       setStartingQuiz(true);
 
-      // Bước 1: Lấy bộ đề câu hỏi cho user
-      console.log('Fetching exam user quizzes...');
       const examUserQuizzesResponse = await quizService.getExamUserQuizzes(
         '3fa85f64-5717-4562-b3fc-2c963f66afa6',
         id!
@@ -114,8 +112,6 @@ export default function QuizDetailPage() {
         throw new Error(examUserQuizzesResponse.message || 'Không thể lấy bộ đề câu hỏi');
       }
 
-      // Bước 2: Tạo submission cho user
-      console.log('Creating submission...');
       const submissionResponse = await quizService.createSubmission(
         '3fa85f64-5717-4562-b3fc-2c963f66afa6',
         id!
@@ -124,12 +120,6 @@ export default function QuizDetailPage() {
       if (submissionResponse.status !== 200) {
         throw new Error(submissionResponse.message || 'Không thể tạo bài nộp');
       }
-
-      console.log('Quiz started successfully:', {
-        examUserQuizzesId: examUserQuizzesResponse.data.examUserQuizzesId,
-        submissionId: submissionResponse.data, // data là string submissionId
-        totalQuestions: examUserQuizzesResponse.data.questions.length
-      });
 
       // Navigate to quiz taking page với dữ liệu cần thiết
       navigate(`/quiz/quiz-taking/${quiz.examQuizzesId}`, {

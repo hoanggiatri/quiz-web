@@ -1,9 +1,8 @@
 import axios from "axios";
+import { tokenService } from "./tokenService";
+import { toast } from "sonner";
 
-const API_BASE_URL =
-  import.meta.env.VITE_QUIZ_BASE_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_QUIZ_BASE_URL;
 
 // Types for Class API
 export interface Class {
@@ -72,7 +71,8 @@ export interface ApiResponse {
  */
 class ClassService {
   private getAuthHeaders() {
-    const token = localStorage.getItem("authToken");
+    // Sử dụng tokenService để lấy access token đúng cách
+    const token = tokenService.getAccessToken();
     return {
       "Content-Type": "application/json",
       Accept: "*/*",
@@ -99,6 +99,7 @@ class ClassService {
       return response.data;
     } catch (error) {
       console.error("Error updating class:", error);
+      toast.error("Đã có lỗi xảy ra khi cập nhật lớp học");
       throw error;
     }
   }
@@ -119,6 +120,7 @@ class ClassService {
       return response.data;
     } catch (error) {
       console.error("Error creating class:", error);
+      toast.error("Đã có lỗi xảy ra khi tạo lớp học");
       throw error;
     }
   }
@@ -138,6 +140,7 @@ class ClassService {
       return response.data;
     } catch (error) {
       console.error("Error fetching classes by user:", error);
+      toast.error("Đã có lỗi xảy ra khi tải danh sách lớp học");
       throw error;
     }
   }
@@ -157,6 +160,7 @@ class ClassService {
       return response.data;
     } catch (error) {
       console.error("Error fetching classes by teacher:", error);
+      toast.error("Đã có lỗi xảy ra khi tải danh sách lớp học");
       throw error;
     }
   }
@@ -173,6 +177,7 @@ class ClassService {
       return response.data;
     } catch (error) {
       console.error("Error fetching all classes:", error);
+      toast.error("Đã có lỗi xảy ra khi tải danh sách lớp học");
       throw error;
     }
   }
@@ -192,6 +197,7 @@ class ClassService {
       return response.data;
     } catch (error) {
       console.error("Error fetching users in class:", error);
+      toast.error("Đã có lỗi xảy ra khi tải danh sách thành viên lớp");
       throw error;
     }
   }
@@ -211,6 +217,7 @@ class ClassService {
       return response.data;
     } catch (error) {
       console.error("Error deleting class:", error);
+      toast.error("Đã có lỗi xảy ra khi xóa lớp học");
       throw error;
     }
   }

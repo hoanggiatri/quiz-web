@@ -164,15 +164,6 @@ class JWTService {
         permissions: payload.permissions || [],
       };
 
-      if (!silent) {
-        console.log("✅ User info extracted from token:", {
-          id: userInfo.id,
-          username: userInfo.username,
-          email: userInfo.email,
-          role: userInfo.role,
-        });
-      }
-
       return userInfo;
     } catch (error) {
       if (!silent)
@@ -261,33 +252,8 @@ class JWTService {
     try {
       const payload = this.decodeToken(token);
       if (!payload) {
-        console.log("❌ Cannot decode token");
         return;
       }
-
-      console.group("🔍 JWT Token Debug Info");
-      console.log("📋 Full Payload:", payload);
-      console.log("👤 User ID:", payload.sub);
-      console.log("📧 Email:", payload.email);
-      console.log("👨‍🎓 Username:", payload.username);
-      console.log("🎓 Student ID:", payload.studentId);
-      console.log("🏫 Class:", payload.class);
-      console.log("🔑 Role:", payload.role);
-      console.log(
-        "⏰ Issued At:",
-        payload.iat ? new Date(payload.iat * 1000) : "N/A"
-      );
-      console.log(
-        "⏰ Expires At:",
-        payload.exp ? new Date(payload.exp * 1000) : "N/A"
-      );
-      console.log(
-        "⏱️ Time Remaining:",
-        this.getTokenTimeRemaining(token),
-        "seconds"
-      );
-      console.log("🔒 Permissions:", payload.permissions);
-      console.groupEnd();
     } catch (error) {
       console.error("❌ Error debugging token:", error);
     }

@@ -34,7 +34,6 @@ export default function UserProfilePage() {
       if (accessToken) {
         // Chỉ log lần đầu, không log trong timer
         const payload = jwtService.getAllClaims(accessToken, !isInitial);
-        console.log("Token info:",payload)
         const remaining = jwtService.getTokenTimeRemaining(accessToken, true); // Always silent for timer
         setTokenInfo(payload);
         setTimeRemaining(remaining);
@@ -43,7 +42,6 @@ export default function UserProfilePage() {
 
     // Initial load với log
     updateTokenInfo(true);
-    console.log('USER:::',user)
     // Timer updates không log
     const interval = setInterval(() => updateTokenInfo(false), 1000);
     return () => clearInterval(interval);

@@ -10,6 +10,7 @@ import type {
 import { authService } from '@/services/authService';
 import { tokenService } from '@/services/tokenService';
 import { jwtService } from '@/services/jwtService';
+import { toast } from 'sonner';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -79,6 +80,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 setUser(userData);
               } catch (error) {
                 console.error('Failed to get current user from API:', error);
+                toast.error('Đã có lỗi xảy ra khi tải thông tin người dùng');
                 tokenService.removeTokens();
                 setUser(null);
               }
@@ -93,6 +95,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
       } catch (error) {
         console.error('Auth initialization failed:', error);
+        toast.error('Đã có lỗi xảy ra khi khởi tạo xác thực');
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -142,7 +145,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
           setUser(userData);
 
-          console.log('✅ Login successful with user info from token:', userData);
         } else {
           // Fallback nếu không decode được token
           const userData: User = {
@@ -154,13 +156,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           };
 
           setUser(userData);
-          console.log('✅ Login successful with fallback user info:', userData);
         }
       } else {
         throw new Error('Đăng nhập thất bại - Sai tài khoản hoặc mật khẩu');
       }
     } catch (error) {
       console.error('Login failed:', error);
+      toast.error('Đã có lỗi xảy ra khi đăng nhập');
       throw error;
     } finally {
       setIsLoading(false);
@@ -183,6 +185,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     } catch (error) {
       console.error('Email login failed:', error);
+      toast.error('Đã có lỗi xảy ra khi đăng nhập email');
       throw error;
     } finally {
       setIsLoading(false);
@@ -206,6 +209,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     } catch (error) {
       console.error('Google login failed:', error);
+      toast.error('Đã có lỗi xảy ra khi đăng nhập Google');
       throw error;
     } finally {
       setIsLoading(false);
@@ -220,8 +224,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setIsLoading(true);
 
       const response = await authService.loginWithQLDT(credentials);
-
-      console.log('res::::',response)
 
       if (response.success && response.tokens) {
         const userInfoFromToken = jwtService.getUserInfoFromToken(response.tokens.accessToken);
@@ -240,8 +242,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             class: userInfoFromToken.class || response.user.class
           };
 
-          console.log('✅ PTIT user info from token:', userData);
-
           // Debug token in development
           if (process.env.NODE_ENV === 'development') {
             jwtService.debugToken(response.tokens.accessToken);
@@ -257,8 +257,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             studentId: response.user.studentId,
             class: response.user.class
           };
-
-          console.log('✅ PTIT user info from response:', userData);
         }
 
         setUser(userData);
@@ -267,6 +265,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
     } catch (error) {
       console.error('QLDT login failed:', error);
+      toast.error('Đã có lỗi xảy ra khi đăng nhập QLDT');
       throw error;
     } finally {
       setIsLoading(false);
@@ -283,6 +282,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setUser(null);
     } catch (error) {
       console.error('Logout failed:', error);
+      toast.error('Đã có lỗi xảy ra khi đăng xuất');
       // Even if logout API fails, clear local state
       setUser(null);
     } finally {
@@ -299,6 +299,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Token is automatically updated in tokenService
     } catch (error) {
       console.error('Token refresh failed:', error);
+      toast.error('Đã có lỗi xảy ra khi làm mới token');
       // If refresh fails, logout user
       setUser(null);
       throw error;

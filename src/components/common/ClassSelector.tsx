@@ -2,9 +2,10 @@ import { useClassContext } from "@/contexts/ClassContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function ClassSelector() {
-  const { classes, selectedClass, setSelectedClass, loading } = useClassContext();
+  const { classes, selectedClass, setSelectedClass, loading, error } = useClassContext();
 
   if (loading) return <span className="w-40 h-8 inline-block bg-muted rounded animate-pulse" />;
+  if (error) return <span className="text-red-500 text-sm">Lỗi: {error}</span>;
   if (!classes.length) return <span className="text-muted-foreground">Không có lớp</span>;
 
   return (

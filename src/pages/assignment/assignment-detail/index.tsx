@@ -88,13 +88,6 @@ export default function AssignmentDetailPage() {
       // API chỉ hỗ trợ submit 1 file, lấy file đầu tiên
       const fileToSubmit = submissionFiles[0];
 
-      console.log('Submitting assignment:', {
-        assignmentId: assignment.id,
-        fileName: fileToSubmit.name,
-        fileSize: fileToSubmit.size,
-        fileType: fileToSubmit.type
-      });
-
       // Call API to submit assignment
       const response = await assignmentService.submitAssignment(
         assignment.id,

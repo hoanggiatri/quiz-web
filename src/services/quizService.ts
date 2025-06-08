@@ -7,6 +7,7 @@ import type {
   SubmitSingleAnswerResponse,
   FinishSubmissionResponse,
 } from "@/types/quiz";
+import { toast } from "sonner";
 
 const API_BASE_URL =
   import.meta.env.VITE_QUIZ_BASE_URL ||
@@ -161,6 +162,7 @@ export const quizService = {
       return response.data;
     } catch (error) {
       console.error("Error creating submission:", error);
+      toast.error("Đã có lỗi xảy ra khi tạo bài làm");
       throw error;
     }
   },
@@ -204,6 +206,7 @@ export const quizService = {
       return response.data;
     } catch (error) {
       console.error("Error finishing submission:", error);
+      toast.error("Đã có lỗi xảy ra khi nộp bài");
       throw error;
     }
   },
@@ -211,9 +214,6 @@ export const quizService = {
   // API để submit answers (deprecated - sử dụng finishSubmission thay thế)
   submitAnswers: async (submitData: SubmitAnswerRequest): Promise<any> => {
     try {
-      // TODO: Implement submit answers API call
-      console.log("Submitting answers:", submitData);
-
       // Mock response for now
       return {
         status: 200,

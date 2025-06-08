@@ -7,6 +7,7 @@ import type {
   QLDTAuthResponse,
 } from "@/types/auth";
 import { tokenService } from "./tokenService";
+import { toast } from "sonner";
 
 // Types for registration
 export interface RegisterRequest {
@@ -75,8 +76,6 @@ class AuthService {
    */
   async register(registerData: RegisterRequest): Promise<RegisterResponse> {
     try {
-      console.log("🚀 Registering user:", registerData);
-
       const response = await fetch(`${this.AUTH_API_URL}/register`, {
         method: "POST",
         headers: {
@@ -85,8 +84,6 @@ class AuthService {
         },
         body: JSON.stringify(registerData),
       });
-
-      console.log("📡 Registration response status:", response.status);
 
       if (!response.ok) {
         let errorMessage = "Đăng ký thất bại";
@@ -102,11 +99,11 @@ class AuthService {
       }
 
       const data: RegisterResponse = await response.json();
-      console.log("✅ Registration successful:", data);
 
       return data;
     } catch (error) {
       console.error("❌ Registration failed:", error);
+      toast.error("Đã có lỗi xảy ra khi đăng ký");
 
       // Handle network errors
       if (error instanceof TypeError && error.message.includes("fetch")) {
@@ -124,8 +121,6 @@ class AuthService {
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
     try {
-      console.log("🚀 Logging in user:", credentials.username);
-
       const response = await fetch(`${this.AUTH_API_URL}/login`, {
         method: "POST",
         headers: {
@@ -134,8 +129,6 @@ class AuthService {
         },
         body: JSON.stringify(credentials),
       });
-
-      console.log("📡 Login response status:", response.status);
 
       if (!response.ok) {
         let errorMessage = "Đăng nhập thất bại";
@@ -151,10 +144,6 @@ class AuthService {
       }
 
       const data: LoginResponse = await response.json();
-      console.log("✅ Login successful:", {
-        status: data.status,
-        hasTokens: !!(data.accessToken && data.refreshToken),
-      });
 
       // Lưu tokens nếu đăng nhập thành công
       if (data.status === 1 && data.accessToken && data.refreshToken) {
@@ -164,12 +153,12 @@ class AuthService {
           expiresIn: 3600, // Default 1 hour, có thể adjust
           tokenType: "Bearer",
         });
-        console.log("💾 Tokens saved successfully");
       }
 
       return data;
     } catch (error) {
       console.error("❌ Login failed:", error);
+      toast.error("Đã có lỗi xảy ra khi đăng nhập");
 
       // Handle network errors
       if (error instanceof TypeError && error.message.includes("fetch")) {
@@ -223,15 +212,8 @@ class AuthService {
    */
   async loginWithGoogle(idToken: string): Promise<AuthResponse> {
     try {
-      console.log("🚀 Logging in with Google...");
-
       // Decode ID token để lấy thông tin user
       const googleUser = this.decodeGoogleIdToken(idToken);
-      console.log("👤 Google user info:", {
-        email: googleUser.email,
-        name: googleUser.name,
-        sub: googleUser.sub,
-      });
 
       const response = await fetch(`${this.AUTH_API_URL}/google`, {
         method: "POST",
@@ -243,8 +225,6 @@ class AuthService {
           serviceTypes: ["QUIZ", "CLASSROOM"], // Hardcoded theo yêu cầu
         }),
       });
-
-      console.log("📡 Google login response status:", response.status);
 
       if (!response.ok) {
         let errorMessage = "Đăng nhập Google thất bại";
@@ -260,10 +240,6 @@ class AuthService {
       }
 
       const data = await response.json();
-      console.log("✅ Google login successful:", {
-        status: data.status,
-        hasTokens: !!(data.accessToken && data.refreshToken),
-      });
 
       // Kiểm tra response format theo API spec
       if (data.status === 1 && data.accessToken && data.refreshToken) {
@@ -288,7 +264,6 @@ class AuthService {
 
         // Lưu tokens
         tokenService.setTokens(authResponse.tokens);
-        console.log("💾 Google tokens saved successfully");
 
         return authResponse;
       } else {
@@ -313,8 +288,6 @@ class AuthService {
    */
   async loginWithQLDT(credentials: QLDTCredentials): Promise<QLDTAuthResponse> {
     try {
-      console.log("🚀 Logging in with PTIT QLDT:", credentials.username);
-
       const response = await fetch(`${this.AUTH_API_URL}/ptit-login`, {
         method: "POST",
         headers: {
@@ -326,8 +299,6 @@ class AuthService {
           password: credentials.password,
         }),
       });
-
-      console.log("📡 PTIT login response status:", response.status);
 
       if (!response.ok) {
         let errorMessage = "Đăng nhập QLDT PTIT thất bại";
@@ -343,10 +314,6 @@ class AuthService {
       }
 
       const data = await response.json();
-      console.log("✅ PTIT login successful:", {
-        status: data.status,
-        hasTokens: !!(data.accessToken && data.refreshToken),
-      });
 
       // Kiểm tra response format theo API spec
       if (data.status === 1 && data.accessToken && data.refreshToken) {
@@ -371,7 +338,6 @@ class AuthService {
 
         // Lưu tokens
         tokenService.setTokens(authResponse.tokens);
-        console.log("💾 PTIT tokens saved successfully");
 
         return authResponse;
       } else {
@@ -517,7 +483,6 @@ class AuthService {
     if (tokenService.isTokenExpiringSoon() && !tokenService.isTokenExpired()) {
       try {
         await this.refreshToken();
-        console.log("✅ Token auto-refreshed");
       } catch (error) {
         console.error("❌ Auto refresh failed:", error);
       }

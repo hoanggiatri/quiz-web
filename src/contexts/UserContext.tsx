@@ -58,15 +58,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       };
 
       setUser(userData);
-      console.log('🔄 UserContext synced with AuthContext:', {
-        id: userData.id,
-        username: userData.username,
-        email: userData.email,
-        role: userData.role
-      });
     } else {
       setUser(null);
-      console.log('🔄 UserContext cleared - user not authenticated');
     }
   }, [authUser, isAuthenticated, authLoading]);
 
