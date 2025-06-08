@@ -2,14 +2,7 @@
 
 /* CSS Variables for layout */
 :root {
-  --header-height: 4rem; /* 64px - adjust this if header height changes */
-  /*
-   * Common header heights:
-   * - 3.5rem (56px) - Compact header
-   * - 4rem (64px) - Standard header (current)
-   * - 5rem (80px) - Large header
-   * - 6rem (96px) - Extra large header
-   */
+  --header-height: 68px; /* 64px - adjust this if header height changes */
 }
 
 /* Smooth transitions for all interactive elements */
@@ -80,7 +73,6 @@ html {
   overflow-y: auto;
   z-index: 10;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease;
 }
 
 .sticky-sidebar:hover {

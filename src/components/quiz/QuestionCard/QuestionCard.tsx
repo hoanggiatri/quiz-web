@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { quizService } from '@/services/quizService';
 import type { Question, Answer } from '@/services/quizService';
 import { Badge } from "@/components/ui/badge";
-import { FileQuestion, AlertTriangle } from "lucide-react";
-import { FlagButton } from './FlagButton';
+import { FileQuestion, AlertTriangle, Flag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+// import { FlagButton } from './FlagButton'; // Removed - not used
 import "./style.css";
 
 interface QuestionCardProps {
@@ -106,10 +108,18 @@ export function QuestionCard({
               )}
             </div>
           </div>
-          <FlagButton
-            isFlagged={isFlagged}
-            onToggle={() => onFlagToggle(question.id)}
-          />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onFlagToggle(question.id)}
+            className={cn(
+              "h-9 w-9 p-0",
+              isFlagged && "bg-yellow-100 text-yellow-600 hover:bg-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400"
+            )}
+            title={isFlagged ? "Bỏ đánh dấu cờ" : "Đánh dấu cờ để xem lại"}
+          >
+            <Flag className={cn("h-4 w-4", isFlagged && "fill-current")} />
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="pt-0">

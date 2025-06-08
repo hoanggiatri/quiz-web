@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -12,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { QuestionMap } from "@/components/quiz/QuestionMap/QuestionMap";
 import { cn } from "@/lib/utils";
 import type { QuestionStatus } from "@/types/quiz";
+import "./style.css";
 
 import {
   Clock,
@@ -22,15 +21,15 @@ import {
   ChevronRight,
   FileText} from "lucide-react";
 
-// Demo data - 20 questions
+// Demo data - 50 questions (for testing sidebar with many questions)
 const DEMO_QUIZ_DATA = {
   quiz: {
     examQuizzesId: "demo-quiz-1",
-    title: "Kiểm tra Toán học - Đại số và Hình học",
-    code: "MATH2024",
+    title: "Kiểm tra Toán học - Đại số và Hình học (Mở rộng)",
+    code: "MATH2024_EXTENDED",
     createdBy: "Thầy Nguyễn Văn A",
-    totalQuestions: 20,
-    duration: 90
+    totalQuestions: 50,
+    duration: 150
   },
   questions: [
     {
@@ -91,17 +90,34 @@ const DEMO_QUIZ_DATA = {
   ]
 };
 
-// Generate more questions to reach 20
-for (let i = 6; i <= 20; i++) {
+// Generate more questions to reach 50 (for testing sidebar with many questions)
+for (let i = 6; i <= 50; i++) {
+  const questionTypes = ["singleChoice", "multipleChoice"];
+  const questionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
+
+  // Create more varied question content
+  const questionContents = [
+    `Câu hỏi số ${i}: Giải phương trình bậc hai: x² - ${i}x + ${Math.floor(i/2)} = 0`,
+    `Câu hỏi số ${i}: Tính đạo hàm của hàm số f(x) = x³ + ${i}x² - ${i*2}x + 1`,
+    `Câu hỏi số ${i}: Trong tam giác ABC, nếu góc A = ${30 + i}°, AB = ${i}, AC = ${i+1}, tính BC?`,
+    `Câu hỏi số ${i}: Tìm giới hạn của dãy số an = (${i}n + 1)/(n + ${i}) khi n → ∞`,
+    `Câu hỏi số ${i}: Cho hàm số y = ${i}x³ - 3x² + 2x - 1. Tìm cực trị của hàm số.`,
+    `Câu hỏi số ${i}: Giải bất phương trình: ${i}x - ${i*2} > ${i+3}x + ${i-1}`,
+    `Câu hỏi số ${i}: Tính tích phân ∫(${i}x² + ${i+1}x + 1)dx từ 0 đến ${i}`,
+    `Câu hỏi số ${i}: Trong không gian Oxyz, cho điểm A(${i}, ${i+1}, ${i-1}). Tìm khoảng cách từ A đến mặt phẳng Oxy.`
+  ];
+
+  const content = questionContents[Math.floor(Math.random() * questionContents.length)];
+
   DEMO_QUIZ_DATA.questions.push({
     id: `q${i}`,
-    content: `Câu hỏi số ${i}: Đây là một câu hỏi demo để test giao diện quiz-taking. Nội dung câu hỏi có thể dài và phức tạp để kiểm tra responsive design.`,
-    type: Math.random() > 0.7 ? "multipleChoice" : "singleChoice",
+    content: content,
+    type: questionType,
     answers: [
-      { id: `a${i*4-3}`, content: `Đáp án A cho câu ${i}`, correct: Math.random() > 0.5 },
-      { id: `a${i*4-2}`, content: `Đáp án B cho câu ${i}`, correct: Math.random() > 0.5 },
-      { id: `a${i*4-1}`, content: `Đáp án C cho câu ${i}`, correct: Math.random() > 0.5 },
-      { id: `a${i*4}`, content: `Đáp án D cho câu ${i}`, correct: Math.random() > 0.5 }
+      { id: `a${i*4-3}`, content: `Đáp án A cho câu ${i}: ${Math.floor(Math.random() * 100)}`, correct: Math.random() > 0.7 },
+      { id: `a${i*4-2}`, content: `Đáp án B cho câu ${i}: ${Math.floor(Math.random() * 100)}`, correct: Math.random() > 0.7 },
+      { id: `a${i*4-1}`, content: `Đáp án C cho câu ${i}: ${Math.floor(Math.random() * 100)}`, correct: Math.random() > 0.7 },
+      { id: `a${i*4}`, content: `Đáp án D cho câu ${i}: ${Math.floor(Math.random() * 100)}`, correct: Math.random() > 0.7 }
     ]
   });
 }
@@ -131,7 +147,6 @@ export default function QuizTakingDemoPageNew() {
   // Initialize refs array when page changes
   useEffect(() => {
     questionRefs.current = new Array(currentPageQuestions.length).fill(null);
-    console.log('Refs initialized for page:', currentPage, 'length:', currentPageQuestions.length);
   }, [currentPage, currentPageQuestions.length]);
 
   // Handle answer selection
@@ -168,100 +183,51 @@ export default function QuizTakingDemoPageNew() {
     });
   };
 
-  // Navigate to question by index - IMPROVED VERSION
+
   const goToQuestion = (questionIndex: number) => {
     const pageIndex = Math.floor(questionIndex / QUESTIONS_PER_PAGE);
     const questionIndexInPage = questionIndex % QUESTIONS_PER_PAGE;
+    const NAVIGATION_DELAY = 100;
 
-    console.log('goToQuestion:', { questionIndex, pageIndex, questionIndexInPage, currentPage });
+    setCurrentQuestionIndex(questionIndex);
 
-    // If we're already on the right page, just scroll
-    if (pageIndex === currentPage) {
+    const scrollToQuestionAndHighlight = (element: HTMLElement) => {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+
+      element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
       setTimeout(() => {
-        const questionElement = questionRefs.current[questionIndexInPage];
-        console.log('Same page - questionElement:', questionElement);
-        if (questionElement) {
-          questionElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
-          // Add highlight effect
-          questionElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => {
-            questionElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-          }, 2000);
-        } else {
-          // Fallback for same page: use querySelector with data attribute
-          const fallbackElement = document.querySelector(`[data-question-index="${questionIndex}"]`) as HTMLElement;
-          console.log('Same page fallback element:', fallbackElement);
-          if (fallbackElement) {
-            fallbackElement.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-              inline: 'nearest'
-            });
-            fallbackElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-            setTimeout(() => {
-              fallbackElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-            }, 2000);
-          }
-        }
-      }, 100);
-    } else {
-      // Change page first, then scroll
+        element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+      }, 2000);
+    };
+
+    if (pageIndex !== currentPage) {
       setCurrentPage(pageIndex);
-
-      // Wait longer for page change and DOM update
-      setTimeout(() => {
-        const questionElement = questionRefs.current[questionIndexInPage];
-        console.log('Different page - questionElement:', questionElement, 'refs:', questionRefs.current);
-        if (questionElement) {
-          questionElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
-          // Add highlight effect
-          questionElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-          setTimeout(() => {
-            questionElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-          }, 2000);
-        } else {
-          // Fallback: try again after a longer delay
-          setTimeout(() => {
-            const retryElement = questionRefs.current[questionIndexInPage];
-            console.log('Retry - questionElement:', retryElement);
-            if (retryElement) {
-              retryElement.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-                inline: 'nearest'
-              });
-              retryElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-              setTimeout(() => {
-                retryElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-              }, 2000);
-            } else {
-              // Final fallback: use querySelector with data attribute
-              const fallbackElement = document.querySelector(`[data-question-index="${questionIndex}"]`) as HTMLElement;
-              console.log('Fallback element:', fallbackElement);
-              if (fallbackElement) {
-                fallbackElement.scrollIntoView({
-                  behavior: 'smooth',
-                  block: 'center',
-                  inline: 'nearest'
-                });
-                fallbackElement.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
-                setTimeout(() => {
-                  fallbackElement.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
-                }, 2000);
-              }
-            }
-          }, 500);
-        }
-      }, 300);
     }
+
+    setTimeout(() => {
+      const questionElement = questionRefs.current[questionIndexInPage];
+
+      if (questionElement) {
+        scrollToQuestionAndHighlight(questionElement);
+      } else {
+        const fallbackElement = document.querySelector(`[data-question-index="${questionIndex}"]`) as HTMLElement;
+        if (fallbackElement) {
+          scrollToQuestionAndHighlight(fallbackElement);
+        } else {
+          setTimeout(() => {
+            const retryElement = questionRefs.current[questionIndexInPage] ||
+                                document.querySelector(`[data-question-index="${questionIndex}"]`) as HTMLElement;
+            if (retryElement) {
+              scrollToQuestionAndHighlight(retryElement);
+            }
+          }, 100);
+        }
+      }
+    }, NAVIGATION_DELAY);
   };
 
   // Submit quiz
@@ -316,13 +282,10 @@ export default function QuizTakingDemoPageNew() {
     }
   };
 
-  // Update currentQuestionIndex when page changes
-  useEffect(() => {
-    setCurrentQuestionIndex(currentPage * QUESTIONS_PER_PAGE);
-  }, [currentPage]);
+  // Note: Removed auto-update of currentQuestionIndex when page changes
+  // to prevent conflicts with manual question navigation
 
   const answeredCount = Object.keys(userAnswers).filter(qId => userAnswers[qId].length > 0).length;
-  const progressPercentage = (answeredCount / questions.length) * 100;
 
   // Create QuestionStatus array for QuestionMap component
   const questionStatuses: QuestionStatus[] = questions.map((question, index) => ({
@@ -334,36 +297,22 @@ export default function QuizTakingDemoPageNew() {
 
   // Handle question navigation from QuestionMap
   const handleQuestionMapClick = (questionIndex: number) => {
-    setCurrentQuestionIndex(questionIndex);
     goToQuestion(questionIndex);
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background transition-colors duration-200">
       <div className="flex relative">
         {/* Question Map Sidebar - Desktop */}
-        <div className="hidden lg:block w-80 border-r bg-card sticky-sidebar">
+        <div className="hidden lg:block w-80 border-r bg-background sticky-sidebar transition-colors duration-200">
           <ScrollArea className="h-full">
-            <div className="p-6 space-y-6">
-              {/* QuestionMap Component */}
+            <div className="p-4 space-y-2">
               <QuestionMap
                 questions={questionStatuses}
                 onQuestionClick={handleQuestionMapClick}
                 currentQuestionIndex={currentQuestionIndex}
               />
 
-              <Separator />
-
-              {/* Progress */}
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>Tiến độ</span>
-                  <span>{Math.round(progressPercentage)}%</span>
-                </div>
-                <Progress value={progressPercentage} className="h-2" />
-              </div>
-
-              {/* Submit Button */}
               <Button
                 onClick={handleSubmitQuiz}
                 disabled={submitting}
@@ -399,10 +348,9 @@ export default function QuizTakingDemoPageNew() {
                 return (
                   <Card
                     key={question.id}
-                    className="transition-all duration-200"
+                    className="transition-colors duration-200"
                     ref={el => {
                       questionRefs.current[index] = el;
-                      console.log(`Ref set for question ${index}:`, el);
                     }}
                     id={`question-${question.id}`}
                     data-question-index={globalIndex}
@@ -459,7 +407,7 @@ export default function QuizTakingDemoPageNew() {
                             {question.answers.map((answer, answerIndex) => {
                               const answerLabel = String.fromCharCode(65 + answerIndex); // A, B, C, D
                               return (
-                                <div key={answer.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                                <div key={answer.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors duration-200">
                                   <RadioGroupItem value={answer.id} id={answer.id} />
                                   <Label
                                     htmlFor={answer.id}
@@ -480,7 +428,7 @@ export default function QuizTakingDemoPageNew() {
                               const answerLabel = String.fromCharCode(65 + answerIndex); // A, B, C, D
                               const isChecked = selectedAnswers.includes(answer.id);
                               return (
-                                <div key={answer.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                                <div key={answer.id} className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-muted/50 transition-colors duration-200">
                                   <Checkbox
                                     id={answer.id}
                                     checked={isChecked}
@@ -519,7 +467,11 @@ export default function QuizTakingDemoPageNew() {
                 <div className="flex items-center justify-between">
                   <Button
                     variant="outline"
-                    onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))}
+                    onClick={() => {
+                      const newPage = Math.max(0, currentPage - 1);
+                      setCurrentPage(newPage);
+                      setCurrentQuestionIndex(newPage * QUESTIONS_PER_PAGE);
+                    }}
                     disabled={currentPage === 0}
                   >
                     <ChevronLeft className="w-4 h-4 mr-2" />
@@ -537,7 +489,11 @@ export default function QuizTakingDemoPageNew() {
 
                   <Button
                     variant="outline"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))}
+                    onClick={() => {
+                      const newPage = Math.min(totalPages - 1, currentPage + 1);
+                      setCurrentPage(newPage);
+                      setCurrentQuestionIndex(newPage * QUESTIONS_PER_PAGE);
+                    }}
                     disabled={currentPage === totalPages - 1}
                   >
                     Trang sau

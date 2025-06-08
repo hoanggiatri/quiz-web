@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { QuestionMap } from "@/components/quiz/QuestionMap/QuestionMap";
+import { cn } from "@/lib/utils";
 import type { QuestionStatus } from "@/types/quiz";
 import "@/styles/quiz-shared.css";
 import "./style.css";
@@ -23,7 +24,7 @@ import {
   Send,
   ChevronLeft,
   ChevronRight,
-  X} from "lucide-react";
+  FileText} from "lucide-react";
 import { quizService } from "@/services/quizService";
 import { quizSubmissionService } from "@/services/quizSubmissionService";
 import type {
@@ -54,9 +55,8 @@ export default function QuizTakingPage() {
   const [submissionId, setSubmissionId] = useState<string>(submissionData?.submissionId || "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [showQuestionMap, setShowQuestionMap] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   // Pagination calculations
@@ -69,13 +69,10 @@ export default function QuizTakingPage() {
   // Initialize refs array when page changes
   useEffect(() => {
     questionRefs.current = new Array(currentPageQuestions.length).fill(null);
-    console.log('Refs initialized for page:', currentPage, 'length:', currentPageQuestions.length);
   }, [currentPage, currentPageQuestions.length]);
 
-  // Update currentQuestionIndex when page changes
-  useEffect(() => {
-    setCurrentQuestionIndex(currentPage * QUESTIONS_PER_PAGE);
-  }, [currentPage]);
+  // Note: Removed auto-update of currentQuestionIndex when page changes
+  // to prevent conflicts with manual question navigation
 
   // Initialize quiz session
   useEffect(() => {
@@ -155,7 +152,6 @@ export default function QuizTakingPage() {
         [questionId]: newAnswers
       }));
 
-      console.log('Answer selected:', { questionId, answerId, newAnswers });
 
       // Auto-save to backend
       if (submissionId) {
@@ -166,7 +162,6 @@ export default function QuizTakingPage() {
             answerId: newAnswers
           };
 
-          console.log('Auto-saving answer:', submitData);
 
           const response = await quizService.submitSingleAnswer(submitData);
 
@@ -222,108 +217,65 @@ export default function QuizTakingPage() {
     }
   };
 
-  // Navigate to question by index - IMPROVED VERSION
+  // Navigate to question by index - CONSISTENT DELAY VERSION
   const goToQuestion = (questionIndex: number) => {
     const pageIndex = Math.floor(questionIndex / QUESTIONS_PER_PAGE);
     const questionIndexInPage = questionIndex % QUESTIONS_PER_PAGE;
+    const NAVIGATION_DELAY = 250; // Consistent delay for all navigation
 
     console.log('goToQuestion:', { questionIndex, pageIndex, questionIndexInPage, currentPage });
 
-    // Close mobile question map
-    setShowQuestionMap(false);
+    // Update currentQuestionIndex immediately to fix map highlighting
+    setCurrentQuestionIndex(questionIndex);
 
-    // If we're already on the right page, just scroll
-    if (pageIndex === currentPage) {
+    // Note: Mobile question map removed in this version
+
+    // Helper function to scroll to question and add highlight
+    const scrollToQuestionAndHighlight = (element: HTMLElement) => {
+      element.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'nearest'
+      });
+      // Add highlight effect
+      element.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2');
       setTimeout(() => {
-        const questionElement = questionRefs.current[questionIndexInPage];
-        console.log('Same page - questionElement:', questionElement);
-        if (questionElement) {
-          questionElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
-          // Add highlight effect
-          questionElement.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5)';
-          questionElement.style.transition = 'box-shadow 0.3s ease';
-          setTimeout(() => {
-            questionElement.style.boxShadow = '';
-          }, 2000);
-        } else {
-          // Fallback for same page: use querySelector with data attribute
-          const fallbackElement = document.querySelector(`[data-question-index="${questionIndex}"]`) as HTMLElement;
-          console.log('Same page fallback element:', fallbackElement);
-          if (fallbackElement) {
-            fallbackElement.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-              inline: 'nearest'
-            });
-            fallbackElement.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5)';
-            fallbackElement.style.transition = 'box-shadow 0.3s ease';
-            setTimeout(() => {
-              fallbackElement.style.boxShadow = '';
-            }, 2000);
-          }
-        }
-      }, 100);
-    } else {
-      // Change page first, then scroll
+        element.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2');
+      }, 2000);
+    };
+
+    // If we need to change page, do it first
+    if (pageIndex !== currentPage) {
       setCurrentPage(pageIndex);
-
-      // Wait for page change and DOM update, then scroll
-      setTimeout(() => {
-        const questionElement = questionRefs.current[questionIndexInPage];
-        console.log('Different page - questionElement:', questionElement, 'refs:', questionRefs.current);
-        if (questionElement) {
-          questionElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
-          // Add highlight effect
-          questionElement.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5)';
-          questionElement.style.transition = 'box-shadow 0.3s ease';
-          setTimeout(() => {
-            questionElement.style.boxShadow = '';
-          }, 2000);
-        } else {
-          // Fallback: try again after a longer delay
-          setTimeout(() => {
-            const retryElement = questionRefs.current[questionIndexInPage];
-            console.log('Retry - questionElement:', retryElement);
-            if (retryElement) {
-              retryElement.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center',
-                inline: 'nearest'
-              });
-              retryElement.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5)';
-              retryElement.style.transition = 'box-shadow 0.3s ease';
-              setTimeout(() => {
-                retryElement.style.boxShadow = '';
-              }, 2000);
-            } else {
-              // Final fallback: use querySelector with data attribute
-              const fallbackElement = document.querySelector(`[data-question-index="${questionIndex}"]`) as HTMLElement;
-              console.log('Fallback element:', fallbackElement);
-              if (fallbackElement) {
-                fallbackElement.scrollIntoView({
-                  behavior: 'smooth',
-                  block: 'center',
-                  inline: 'nearest'
-                });
-                fallbackElement.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5)';
-                fallbackElement.style.transition = 'box-shadow 0.3s ease';
-                setTimeout(() => {
-                  fallbackElement.style.boxShadow = '';
-                }, 2000);
-              }
-            }
-          }, 500);
-        }
-      }, 300);
     }
+
+    // Use consistent delay for both same page and different page navigation
+    setTimeout(() => {
+      // Try to get element by ref first
+      const questionElement = questionRefs.current[questionIndexInPage];
+      console.log('Navigation - questionElement:', questionElement, 'delay:', NAVIGATION_DELAY);
+
+      if (questionElement) {
+        scrollToQuestionAndHighlight(questionElement);
+      } else {
+        // Fallback: use querySelector with data attribute
+        const fallbackElement = document.querySelector(`[data-question-index="${questionIndex}"]`) as HTMLElement;
+        console.log('Fallback element:', fallbackElement);
+        if (fallbackElement) {
+          scrollToQuestionAndHighlight(fallbackElement);
+        } else {
+          // Final fallback: try again after a short delay for DOM update
+          setTimeout(() => {
+            const retryElement = questionRefs.current[questionIndexInPage] ||
+                                document.querySelector(`[data-question-index="${questionIndex}"]`) as HTMLElement;
+            console.log('Retry element:', retryElement);
+            if (retryElement) {
+              scrollToQuestionAndHighlight(retryElement);
+            }
+          }, 100);
+        }
+      }
+    }, NAVIGATION_DELAY);
   };
 
 
@@ -341,11 +293,6 @@ export default function QuizTakingPage() {
     try {
       setSubmitting(true);
 
-      console.log('Finishing submission:', {
-        submissionId,
-        totalAnsweredQuestions: Object.keys(userAnswers).length,
-        totalQuestions: questions.length
-      });
 
       // Finish submission using the API
       const result = await quizService.finishSubmission(submissionId);
@@ -452,20 +399,17 @@ export default function QuizTakingPage() {
 
   // Handle question navigation from QuestionMap
   const handleQuestionMapClick = (questionIndex: number) => {
-    setCurrentQuestionIndex(questionIndex);
+    // goToQuestion already handles setCurrentQuestionIndex
     goToQuestion(questionIndex);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-blue-900/20 dark:to-indigo-900/20">
-
-      {/* Main Content */}
+    <div className="min-h-screen bg-background transition-colors duration-200">
       <div className="flex relative">
         {/* Question Map Sidebar - Desktop */}
-        <div className="hidden lg:block w-80 border-r bg-card sticky-sidebar">
-          <ScrollArea className="h-full">
-            <div className="p-6 space-y-6">
-              {/* QuestionMap Component */}
+        <div className="hidden lg:block w-80 border-r bg-background sticky-sidebar transition-colors duration-200">
+          <ScrollArea className="h-screen">
+            <div className="p-4 space-y-4 flex flex-col h-full">
               <QuestionMap
                 questions={questionStatuses}
                 onQuestionClick={handleQuestionMapClick}
@@ -483,7 +427,6 @@ export default function QuizTakingPage() {
                 <Progress value={(answeredCount / questions.length) * 100} className="h-2" />
               </div>
 
-              {/* Submit Button */}
               <Button
                 onClick={handleSubmitQuiz}
                 disabled={submitting}
@@ -507,80 +450,61 @@ export default function QuizTakingPage() {
         </div>
 
         {/* Questions Content Area */}
-        <div className="flex-1 max-w-5xl mx-auto p-8">
-          {/* Mobile Question Map */}
-          {showQuestionMap && (
-            <Card className="mb-6 lg:hidden">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Bản đồ câu hỏi</CardTitle>
-                <Button variant="ghost" size="sm" onClick={() => setShowQuestionMap(false)}>
-                  <X className="w-4 h-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <QuestionMap
-                  questions={questionStatuses}
-                  onQuestionClick={handleQuestionMapClick}
-                  currentQuestionIndex={currentQuestionIndex}
-                  className="border-0 shadow-none p-0"
-                />
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Questions List */}
-          <div className="space-y-6">
-            {currentPageQuestions.map((question, pageIndex) => {
-              const questionIndex = currentPage * QUESTIONS_PER_PAGE + pageIndex;
-              const hasAnswer = userAnswers[question.id] && userAnswers[question.id].length > 0;
+        <div className="flex-1">
+          <div className="max-w-4xl mx-auto p-6">
+            {/* Questions */}
+            <div className="space-y-6">
+            {currentPageQuestions.map((question, index) => {
+              const globalIndex = currentPage * QUESTIONS_PER_PAGE + index;
               const isFlagged = flaggedQuestions.has(question.id);
+
 
               return (
                 <Card
                   key={question.id}
-                  ref={(el) => {
-                    questionRefs.current[pageIndex] = el;
-                    console.log(`Ref set for question ${pageIndex}:`, el);
+                  className="transition-colors duration-200"
+                  ref={el => {
+                    questionRefs.current[index] = el;
+                    console.log(`Ref set for question ${index}:`, el);
                   }}
-                  className={`transition-all duration-200 hover:shadow-md ${
-                    hasAnswer ? 'border-green-200 bg-green-50/30 dark:border-green-800 dark:bg-green-900/10' : ''
-                  } ${
-                    isFlagged ? 'border-yellow-200 bg-yellow-50/30 dark:border-yellow-800 dark:bg-yellow-900/10' : ''
-                  }`}
-                  data-question-index={questionIndex}
+                  id={`question-${question.id}`}
+                  data-question-index={globalIndex}
                 >
-                  <CardHeader className="pb-4">
+                  <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white">
-                        Câu {questionIndex + 1}
-                      </CardTitle>
-                      <div className="flex items-center gap-2">
-                        {saving && (
-                          <Badge variant="outline" className="text-blue-600 border-blue-200">
-                            <Clock className="w-3 h-3 mr-1 animate-spin" />
-                            Đang lưu...
+                      <div className="flex items-center gap-3">
+                        <Badge variant="outline" className="px-3 py-1">
+                          #{globalIndex + 1}
+                        </Badge>
+                        <div>
+                          <CardTitle className="text-lg">Câu {globalIndex + 1}</CardTitle>
+                          <Badge variant="secondary" className="mt-1">
+                            {question.type === 'singleChoice' ? (
+                              <>
+                                <FileText className="w-3 h-3 mr-1" />
+                                Một đáp án
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Nhiều đáp án
+                              </>
+                            )}
                           </Badge>
-                        )}
-                        {hasAnswer && (
-                          <Badge className="bg-green-600 hover:bg-green-700">
-                            <CheckCircle className="w-3 h-3 mr-1" />
-                            Đã trả lời
-                          </Badge>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleToggleFlag(question.id)}
-                          className={`transition-all ${
-                            isFlagged
-                              ? 'border-yellow-400 bg-yellow-50 text-yellow-700 hover:bg-yellow-100 dark:bg-yellow-900/20 dark:border-yellow-600 dark:text-yellow-400'
-                              : 'hover:border-yellow-400 hover:text-yellow-600'
-                          }`}
-                          title={isFlagged ? 'Bỏ đánh dấu' : 'Đánh dấu câu hỏi'}
-                        >
-                          <Flag className={`w-4 h-4 ${isFlagged ? 'fill-current' : ''}`} />
-                        </Button>
+                        </div>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleFlag(question.id)}
+                        className={cn(
+                          "h-9 w-9 p-0",
+                          isFlagged && "bg-yellow-100 text-yellow-600 hover:bg-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400"
+                        )}
+                        title={isFlagged ? "Bỏ đánh dấu cờ" : "Đánh dấu cờ để xem lại"}
+                      >
+                        <Flag className={cn("h-4 w-4", isFlagged && "fill-current")} />
+                      </Button>
                     </div>
                   </CardHeader>
 
@@ -669,89 +593,50 @@ export default function QuizTakingPage() {
             })}
           </div>
 
-          {/* Bottom Navigation */}
-          <div className="mt-8 p-4 bg-white dark:bg-gray-800 rounded-lg border shadow-sm">
-            <div className="flex items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                disabled={currentPage === 0}
-                className="flex items-center gap-2"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                Trang trước
-              </Button>
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="mt-8 pt-6 border-t">
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const newPage = Math.max(0, currentPage - 1);
+                      setCurrentPage(newPage);
+                      setCurrentQuestionIndex(newPage * QUESTIONS_PER_PAGE);
+                    }}
+                    disabled={currentPage === 0}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-2" />
+                    Trang trước
+                  </Button>
 
-              <div className="flex items-center gap-2">
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i;
-                  } else if (currentPage < 3) {
-                    pageNum = i;
-                  } else if (currentPage > totalPages - 4) {
-                    pageNum = totalPages - 5 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Trang {currentPage + 1} / {totalPages}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      ({currentPage * QUESTIONS_PER_PAGE + 1}-{Math.min((currentPage + 1) * QUESTIONS_PER_PAGE, questions.length)} / {questions.length} câu)
+                    </span>
+                  </div>
 
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={pageNum === currentPage ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setCurrentPage(pageNum)}
-                      className="w-10 h-10"
-                    >
-                      {pageNum + 1}
-                    </Button>
-                  );
-                })}
-                {totalPages > 5 && currentPage < totalPages - 3 && (
-                  <>
-                    <span className="text-gray-400">...</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(totalPages - 1)}
-                      className="w-10 h-10"
-                    >
-                      {totalPages}
-                    </Button>
-                  </>
-                )}
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const newPage = Math.min(totalPages - 1, currentPage + 1);
+                      setCurrentPage(newPage);
+                      setCurrentQuestionIndex(newPage * QUESTIONS_PER_PAGE);
+                    }}
+                    disabled={currentPage === totalPages - 1}
+                  >
+                    Trang sau
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
               </div>
-
-              <Button
-                variant="outline"
-                onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                disabled={currentPage === totalPages - 1}
-                className="flex items-center gap-2"
-              >
-                Trang sau
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Page Summary */}
-            <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-              Hiển thị câu {currentPage * QUESTIONS_PER_PAGE + 1} - {Math.min((currentPage + 1) * QUESTIONS_PER_PAGE, questions.length)}
-              trong tổng số {questions.length} câu hỏi
-            </div>
+            )}
           </div>
         </div>
       </div>
-
-      {/* Submit Warning */}
-      {timeRemaining <= 300 && timeRemaining > 0 && (
-        <Alert variant="destructive" className="mt-6">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            Chỉ còn {Math.floor(timeRemaining / 60)} phút {timeRemaining % 60} giây!
-            Bài thi sẽ tự động nộp khi hết thời gian.
-          </AlertDescription>
-        </Alert>
-      )}
     </div>
   );
 }

@@ -1,56 +1,25 @@
 /* Question Map Sidebar Styles */
 
-/* Question Map Sidebar */
+/* Question Map Sidebar - Use CSS variables for theme sync */
 .question-map-sidebar {
-  background: rgba(255, 255, 255, 0.98);
-  backdrop-filter: blur(15px);
-  border-right: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05);
+  background: hsl(var(--background));
+  border-right: 1px solid hsl(var(--border));
+  transition: all 0.2s ease-in-out;
 }
 
-.question-map-sidebar.dark {
-  background: rgba(31, 41, 55, 0.98);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 2px 0 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Question Map Buttons */
+/* Question Map Buttons - Use Shadcn UI variables for theme sync */
 .question-map-button {
   position: relative;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 12px;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  border-radius: 8px;
+  font-weight: 500;
 }
 
 .question-map-button:hover {
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
-.question-map-button.answered {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  color: white;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
-}
-
-.question-map-button.flagged {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  color: #92400e;
-  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
-}
-
-.question-map-button.unanswered {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  color: #6b7280;
-  border: 2px solid #d1d5db;
-}
-
-.question-map-button.unanswered.dark {
-  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
-  color: #d1d5db;
-  border: 2px solid #6b7280;
-}
+/* Use Tailwind/Shadcn classes instead of custom CSS for better theme sync */
 
 /* Question Navigation Improvements */
 .question-map-button:active {
@@ -68,7 +37,7 @@
     transform: translateX(-100%);
     transition: transform 0.3s ease-in-out;
   }
-  
+
   .question-map-sidebar.open {
     transform: translateX(0);
   }
