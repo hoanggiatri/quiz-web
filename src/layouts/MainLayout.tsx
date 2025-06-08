@@ -10,22 +10,10 @@ interface MainLayoutProps {
 }
 
 export default function MainLayout({ children, onLogout }: MainLayoutProps) {
-  const { userId, isLoading } = useUserContext();
+  const { userId } = useUserContext();
 
-  // Nếu đang loading hoặc chưa có userId, hiển thị layout cơ bản
-  if (isLoading || !userId) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header onLogout={onLogout} />
-        <main className="flex-1 w-full">
-          {children}
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
-  // Khi có userId thực, wrap với ClassProvider
+  // Luôn wrap với ClassProvider, nhưng truyền userId có thể null
   return (
     <ClassProvider userId={userId}>
       <div className="min-h-screen flex flex-col bg-background">

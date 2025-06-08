@@ -57,7 +57,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         avatar: authUser.avatar
       };
 
-      setUser(userData);
+      setUser(userData)
     } else {
       setUser(null);
     }

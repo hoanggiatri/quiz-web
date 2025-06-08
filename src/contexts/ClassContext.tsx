@@ -20,7 +20,7 @@ export const useClassContext = () => {
 };
 
 interface ClassProviderProps {
-  userId: string;
+  userId: string | null;
   children: ReactNode;
 }
 
@@ -32,6 +32,9 @@ export const ClassProvider = ({ userId, children }: ClassProviderProps) => {
 
   useEffect(() => {
     if (!userId) {
+      setClasses([]);
+      setSelectedClass(null);
+      setError(null);
       setLoading(false);
       return;
     }
@@ -46,7 +49,6 @@ export const ClassProvider = ({ userId, children }: ClassProviderProps) => {
         setError(null);
       })
       .catch((err) => {
-        console.error('❌ ClassProvider: Failed to load classes:', err);
         toast.error('Đã có lỗi xảy ra khi tải danh sách lớp');
         setClasses([]);
         setSelectedClass(null);
