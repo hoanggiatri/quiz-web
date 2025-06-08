@@ -2,7 +2,8 @@ import axios from "axios";
 import { tokenService } from "./tokenService";
 import { toast } from "sonner";
 
-const API_BASE_URL = import.meta.env.VITE_QUIZ_BASE_URL;
+const API_BASE_URL =
+  import.meta.env.VITE_QUIZ_BASE_URL || "http://36.50.135.242:9006/mcs";
 
 // Types for Class API
 export interface Class {
