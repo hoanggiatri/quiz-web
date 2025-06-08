@@ -2,8 +2,6 @@ import axios from "axios";
 import { tokenService } from "./tokenService";
 import { toast } from "sonner";
 
-const API_BASE_URL = import.meta.env.VITE_QUIZ_BASE_URL;
-
 // Types for Class API
 export interface Class {
   id: string;
@@ -70,6 +68,8 @@ export interface ApiResponse {
  * Handles all class-related API operations based on the provided endpoints
  */
 class ClassService {
+  private readonly API_BASE_URL = import.meta.env.VITE_QUIZ_BASE_URL;
+
   private getAuthHeaders() {
     // Sử dụng tokenService để lấy access token đúng cách
     const token = tokenService.getAccessToken();
@@ -90,7 +90,7 @@ class ClassService {
   ): Promise<ClassResponse> {
     try {
       const response = await axios.put(
-        `${API_BASE_URL}/classes/update/${classId}`,
+        `${this.API_BASE_URL}/classes/update/${classId}`,
         data,
         {
           headers: this.getAuthHeaders(),
@@ -98,7 +98,6 @@ class ClassService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error updating class:", error);
       toast.error("Đã có lỗi xảy ra khi cập nhật lớp học");
       throw error;
     }
@@ -111,7 +110,7 @@ class ClassService {
   async createClass(data: CreateClassRequest): Promise<ClassResponse> {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/classes/create`,
+        `${this.API_BASE_URL}/classes/create`,
         data,
         {
           headers: this.getAuthHeaders(),
@@ -119,7 +118,6 @@ class ClassService {
       );
       return response.data;
     } catch (error) {
-      console.error("Error creating class:", error);
       toast.error("Đã có lỗi xảy ra khi tạo lớp học");
       throw error;
     }
@@ -132,14 +130,13 @@ class ClassService {
   async getClassesByUser(userId: string): Promise<ClassListResponse> {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/classes/user/${userId}`,
+        `${this.API_BASE_URL}/classes/user/${userId}`,
         {
           headers: this.getAuthHeaders(),
         }
       );
       return response.data;
     } catch (error) {
-      console.error("Error fetching classes by user:", error);
       toast.error("Đã có lỗi xảy ra khi tải danh sách lớp học");
       throw error;
     }
@@ -152,14 +149,13 @@ class ClassService {
   async getClassesByTeacher(teacherId: string): Promise<ClassListResponse> {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/classes/teacher/${teacherId}`,
+        `${this.API_BASE_URL}/classes/teacher/${teacherId}`,
         {
           headers: this.getAuthHeaders(),
         }
       );
       return response.data;
     } catch (error) {
-      console.error("Error fetching classes by teacher:", error);
       toast.error("Đã có lỗi xảy ra khi tải danh sách lớp học");
       throw error;
     }
@@ -171,12 +167,11 @@ class ClassService {
    */
   async getAllClasses(): Promise<ClassListResponse> {
     try {
-      const response = await axios.get(`${API_BASE_URL}/classes/get-all`, {
+      const response = await axios.get(`${this.API_BASE_URL}/classes/get-all`, {
         headers: this.getAuthHeaders(),
       });
       return response.data;
     } catch (error) {
-      console.error("Error fetching all classes:", error);
       toast.error("Đã có lỗi xảy ra khi tải danh sách lớp học");
       throw error;
     }
@@ -189,14 +184,13 @@ class ClassService {
   async getUsersInClass(classId: string): Promise<ClassUsersResponse> {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/classes/all-user-in-classes/${classId}`,
+        `${this.API_BASE_URL}/classes/all-user-in-classes/${classId}`,
         {
           headers: this.getAuthHeaders(),
         }
       );
       return response.data;
     } catch (error) {
-      console.error("Error fetching users in class:", error);
       toast.error("Đã có lỗi xảy ra khi tải danh sách thành viên lớp");
       throw error;
     }
@@ -209,14 +203,13 @@ class ClassService {
   async deleteClass(classId: string): Promise<ApiResponse> {
     try {
       const response = await axios.delete(
-        `${API_BASE_URL}/classes/delete/${classId}`,
+        `${this.API_BASE_URL}/classes/delete/${classId}`,
         {
           headers: this.getAuthHeaders(),
         }
       );
       return response.data;
     } catch (error) {
-      console.error("Error deleting class:", error);
       toast.error("Đã có lỗi xảy ra khi xóa lớp học");
       throw error;
     }

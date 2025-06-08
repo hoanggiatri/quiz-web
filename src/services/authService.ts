@@ -1,5 +1,4 @@
 import type {
-  LoginCredentials,
   LoginRequest,
   LoginResponse,
   QLDTCredentials,
@@ -167,42 +166,6 @@ class AuthService {
         );
       }
 
-      throw error;
-    }
-  }
-
-  /**
-   * Đăng nhập bằng email/password (API cũ)
-   */
-  async loginWithEmail(credentials: LoginCredentials): Promise<AuthResponse> {
-    try {
-      const response = await fetch(`${this.API_BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: credentials.email,
-          password: credentials.password,
-          rememberMe: credentials.rememberMe,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Đăng nhập thất bại");
-      }
-
-      const data: AuthResponse = await response.json();
-
-      // Lưu tokens
-      if (data.success && data.tokens) {
-        tokenService.setTokens(data.tokens);
-      }
-
-      return data;
-    } catch (error) {
-      console.error("❌ Email login failed:", error);
       throw error;
     }
   }
