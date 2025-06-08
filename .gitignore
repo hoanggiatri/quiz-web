@@ -49,3 +49,6 @@ out/
 .env.production
 vercel.json
 scripts/deploy.sh
+
+.vercel
+scripts/deploy.ps1
