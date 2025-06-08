@@ -90,7 +90,6 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (credentials: LoginRequest) => Promise<void>;
-  loginWithEmail: (credentials: LoginCredentials) => Promise<void>;
   loginWithGoogle: (credential: string) => Promise<void>;
   loginWithQLDT: (credentials: QLDTCredentials) => Promise<void>;
   logout: () => void;

@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import type {
   AuthContextType,
   User,
-  LoginCredentials,
   LoginRequest,
   QLDTCredentials
 } from '@/types/auth';
@@ -169,28 +168,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
-  /**
-   * Login with email/password (API cũ)
-   */
-  const loginWithEmail = useCallback(async (credentials: LoginCredentials) => {
-    try {
-      setIsLoading(true);
-
-      const response = await authService.loginWithEmail(credentials);
-
-      if (response.success) {
-        setUser(response.user);
-      } else {
-        throw new Error(response.message || 'Đăng nhập email thất bại');
-      }
-    } catch (error) {
-      console.error('Email login failed:', error);
-      toast.error('Đã có lỗi xảy ra khi đăng nhập email');
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   /**
    * Login with Google
@@ -311,7 +288,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isAuthenticated,
     isLoading,
     login,
-    loginWithEmail,
     loginWithGoogle,
     loginWithQLDT,
     logout,

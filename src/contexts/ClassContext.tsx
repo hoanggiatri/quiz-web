@@ -13,6 +13,7 @@ interface ClassContextType {
 
 const ClassContext = createContext<ClassContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useClassContext = () => {
   const ctx = useContext(ClassContext);
   if (!ctx) throw new Error("useClassContext must be used within ClassProvider");
