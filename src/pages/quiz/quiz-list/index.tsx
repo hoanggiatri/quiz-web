@@ -4,14 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   BookOpen,
   Play,
   Users,
-  AlertTriangle,
   Calendar,
   User,
   Search,
@@ -32,7 +31,7 @@ export default function QuizListPage() {
   const [quizzes, setQuizzes] = useState<PublicQuiz[]>([]);
   const [filteredQuizzes, setFilteredQuizzes] = useState<PublicQuiz[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const [searchParams, setSearchParams] = useState({
@@ -101,7 +100,6 @@ export default function QuizListPage() {
 
       try {
         setLoading(true);
-        setError(null);
 
         const response = await quizService.getExamQuizzesByClassId(selectedClass.id);
         if (response.status === 200 && response.data) {
@@ -109,9 +107,9 @@ export default function QuizListPage() {
         } else {
           throw new Error(response.message || 'Không thể tải danh sách bài thi');
         }
-      } catch (err) {
-        console.error('Error loading quizzes:', err);
-        setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu');
+      } catch {
+        // Set empty data instead of error for better UX
+        setQuizzes([]);
       } finally {
         setLoading(false);
       }
@@ -182,17 +180,7 @@ export default function QuizListPage() {
 
 
 
-  // Show error state
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
+  // Remove error state - handle as empty data instead
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -343,12 +331,6 @@ export default function QuizListPage() {
             </Card>
           ))}
         </div>
-      ) : error ? (
-        /* Error State */
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
       ) : paginatedQuizzes.length === 0 ? (
         /* Empty State */
         <div className="flex flex-col items-center justify-center min-h-[400px]">

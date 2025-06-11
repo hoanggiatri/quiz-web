@@ -77,8 +77,9 @@ export default function AssignmentListPage() {
         setError(null);
         const assignmentList = await assignmentManagementService.getAssignmentsByClassId(selectedClass.id);
         setAssignments(assignmentList);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu');
+      } catch {
+        // Set empty data instead of error
+        setAssignments([]);
       } finally {
         setLoading(false);
       }

@@ -55,7 +55,7 @@ export function AutoSaveStatus({
       case 'success':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'error':
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-orange-500" />;
       case 'pending':
         return <Clock className="h-4 w-4 text-yellow-500" />;
       default:
@@ -72,7 +72,7 @@ export function AutoSaveStatus({
       case 'success':
         return 'Đã lưu';
       case 'error':
-        return 'Lỗi lưu';
+        return 'Tạm dừng';
       case 'pending':
         return `Chờ lưu (${pendingChanges})`;
       default:
@@ -166,18 +166,18 @@ export function AutoSaveStatus({
           )}
 
           {/* Error Alert */}
-          {status === 'error' && error && (
-            <Alert variant="destructive" className="py-2">
-              <AlertTriangle className="h-4 w-4" />
+          {status === 'error' && (
+            <Alert variant="default" className="py-2 border-orange-200 bg-orange-50 dark:bg-orange-950/20">
+              <AlertTriangle className="h-4 w-4 text-orange-500" />
               <AlertDescription className="text-xs">
-                <div className="font-medium mb-1">Không thể lưu tự động</div>
-                <div className="text-muted-foreground">{error}</div>
-                <div className="mt-2 flex gap-2">
+                <div className="font-medium mb-1 text-orange-700 dark:text-orange-300">Lưu tự động tạm dừng</div>
+                <div className="text-orange-600 dark:text-orange-400 mb-2">Vui lòng thử lại hoặc lưu thủ công</div>
+                <div className="flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={onRetry}
-                    className="h-6 px-2 text-xs"
+                    className="h-6 px-2 text-xs border-orange-300 text-orange-700 hover:bg-orange-100"
                   >
                     <RefreshCw className="h-3 w-3 mr-1" />
                     Thử lại
@@ -186,7 +186,7 @@ export function AutoSaveStatus({
                     variant="outline"
                     size="sm"
                     onClick={onForceSave}
-                    className="h-6 px-2 text-xs"
+                    className="h-6 px-2 text-xs border-orange-300 text-orange-700 hover:bg-orange-100"
                   >
                     Lưu thủ công
                   </Button>
@@ -244,14 +244,14 @@ export function AutoSaveStatusCompact({
       <div className={cn("flex items-center gap-1 text-xs", getStatusColor())}>
         {status === 'saving' && <Loader2 className="h-3 w-3 animate-spin" />}
         {status === 'success' && <CheckCircle className="h-3 w-3" />}
-        {status === 'error' && <AlertTriangle className="h-3 w-3" />}
+        {status === 'error' && <AlertTriangle className="h-3 w-3 text-orange-500" />}
         {status === 'pending' && <Clock className="h-3 w-3" />}
         {status === 'idle' && (hasUnsavedChanges ? <CloudOff className="h-3 w-3" /> : <Cloud className="h-3 w-3" />)}
         
         <span>
           {status === 'saving' && 'Lưu...'}
           {status === 'success' && 'Đã lưu'}
-          {status === 'error' && 'Lỗi'}
+          {status === 'error' && 'Tạm dừng'}
           {status === 'pending' && `Chờ (${pendingChanges})`}
           {status === 'idle' && (hasUnsavedChanges ? 'Chưa lưu' : 'Đồng bộ')}
         </span>

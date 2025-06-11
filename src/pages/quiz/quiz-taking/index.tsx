@@ -359,18 +359,18 @@ export default function QuizTakingPage() {
     );
   }
 
-  // Error state
-  if (error || !quiz || questions.length === 0) {
+  // No data state
+  if (!quiz || questions.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>
-            {error || 'Không thể tải bài thi. Vui lòng thử lại sau.'}
-          </AlertDescription>
-        </Alert>
-        <div className="mt-4">
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <BookOpen className="w-16 h-16 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-semibold mb-2">Không có câu hỏi</h2>
+          <p className="text-muted-foreground mb-4">
+            Bài thi này hiện tại chưa có câu hỏi nào.
+          </p>
           <Button onClick={() => navigate('/quiz/quiz-list')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
             Quay lại danh sách bài thi
           </Button>
         </div>

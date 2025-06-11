@@ -98,8 +98,8 @@ export default function QuizResultPage() {
     );
   }
 
-  // Error state
-  if (error || !result) {
+  // No data state
+  if (!result) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="flex items-center gap-4 mb-6">
@@ -111,10 +111,19 @@ export default function QuizResultPage() {
           </Link>
         </div>
 
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error || 'Không tìm thấy kết quả bài thi'}</AlertDescription>
-        </Alert>
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <FileText className="w-16 h-16 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-semibold mb-2">Không có kết quả</h2>
+          <p className="text-muted-foreground mb-4">
+            Chưa có kết quả bài thi để hiển thị.
+          </p>
+          <Link to="/quiz/quiz-list">
+            <Button>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Quay lại danh sách
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }

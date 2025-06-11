@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -15,7 +16,6 @@ import {
   ArrowLeft,
   Calendar,
   User,
-  AlertTriangle,
   Info,
   FileText,
   Zap,
@@ -38,7 +38,7 @@ export default function QuizDetailPage() {
 
   const [quiz, setQuiz] = useState<PublicQuiz | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
   const [startingQuiz, setStartingQuiz] = useState(false);
 
   // Load quiz details
@@ -48,7 +48,6 @@ export default function QuizDetailPage() {
 
       try {
         setLoading(true);
-        setError(null);
         const response = await quizService.getQuizQuestions(id);
 
         if (response.status === 200 && response.data) {
@@ -56,9 +55,9 @@ export default function QuizDetailPage() {
         } else {
           throw new Error(response.message || 'Không thể tải thông tin bài thi');
         }
-      } catch (err) {
-        console.error('Error loading quiz details:', err);
-        setError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tải dữ liệu');
+      } catch {
+        // Set quiz to null for no data state
+        setQuiz(null);
       } finally {
         setLoading(false);
       }
@@ -131,9 +130,9 @@ export default function QuizDetailPage() {
         }
       });
 
-    } catch (err) {
-      console.error('Error starting quiz:', err);
-      setError(err instanceof Error ? err.message : 'Không thể bắt đầu bài thi. Vui lòng thử lại.');
+    } catch {
+      // Silent fail - user can try again
+      toast.error('Không thể bắt đầu bài thi. Vui lòng thử lại.');
     } finally {
       setStartingQuiz(false);
     }
@@ -180,8 +179,8 @@ export default function QuizDetailPage() {
     );
   }
 
-  // Error state
-  if (error || !quiz) {
+  // No data state
+  if (!quiz) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="flex items-center gap-4 mb-6">
@@ -193,10 +192,19 @@ export default function QuizDetailPage() {
           </Link>
         </div>
 
-        <Alert variant="destructive">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription>{error || 'Không tìm thấy bài thi'}</AlertDescription>
-        </Alert>
+        <div className="flex flex-col items-center justify-center min-h-[400px]">
+          <BookOpen className="w-16 h-16 text-muted-foreground mb-4" />
+          <h2 className="text-2xl font-semibold mb-2">Không tìm thấy bài thi</h2>
+          <p className="text-muted-foreground mb-4">
+            Bài thi này có thể đã bị xóa hoặc không tồn tại.
+          </p>
+          <Link to="/quiz/quiz-list">
+            <Button>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Quay lại danh sách
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }

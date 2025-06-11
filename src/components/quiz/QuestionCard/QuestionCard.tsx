@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { quizService } from '@/services/quizService';
 import type { Question, Answer } from '@/services/quizService';
 import { Badge } from "@/components/ui/badge";
-import { FileQuestion, AlertTriangle, Flag } from "lucide-react";
+import { FileQuestion, HelpCircle, Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 // import { FlagButton } from './FlagButton'; // Removed - not used
@@ -80,11 +80,11 @@ export function QuestionCard({
 
   if (error) {
     return (
-      <Card className="mb-4 border-red-200 bg-red-50 dark:bg-red-950/20">
+      <Card className="mb-4 border-muted">
         <CardContent className="p-6">
-          <div className="flex items-center gap-2 text-red-500">
-            <AlertTriangle className="w-5 h-5" />
-            <p>{error}</p>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <HelpCircle className="w-5 h-5" />
+            <p>Không thể tải câu hỏi</p>
           </div>
         </CardContent>
       </Card>
