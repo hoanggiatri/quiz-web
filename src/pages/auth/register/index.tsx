@@ -248,7 +248,7 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
               Tài khoản của bạn đã được tạo thành công. Bạn có thể đăng nhập
               ngay bây giờ.
             </p>
-            <Link to="/auth/login">
+            <Link to="/login">
               <Button className="w-full">Đăng nhập ngay</Button>
             </Link>
           </div>

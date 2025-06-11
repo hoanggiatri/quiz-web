@@ -29,7 +29,7 @@ function AppContent() {
   // Route bảo vệ - chỉ cho phép truy cập khi đã đăng nhập
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (!isAuthenticated) {
-      return <Navigate to="/auth/login" replace />;
+      return <Navigate to="/login" replace />;
     }
     return <>{children}</>;
   };
@@ -39,7 +39,7 @@ function AppContent() {
       <Routes>
         {/* Auth routes */}
         <Route
-          path="/auth/login"
+          path="/login"
           element={
             isAuthenticated ?
               <Navigate to="/" replace /> :
@@ -48,17 +48,13 @@ function AppContent() {
         />
 
         <Route
-          path="/auth/register"
+          path="/register"
           element={
             isAuthenticated ?
               <Navigate to="/" replace /> :
-              <RegisterPage onRegisterSuccess={() => window.location.href = '/auth/login'} />
+              <RegisterPage onRegisterSuccess={() => window.location.href = '/login'} />
           }
         />
-
-        {/* Legacy routes - redirect to new auth paths */}
-        <Route path="/login" element={<Navigate to="/auth/login" replace />} />
-        <Route path="/register" element={<Navigate to="/auth/register" replace />} />
 
         {/* Các trang yêu cầu đăng nhập */}
         <Route

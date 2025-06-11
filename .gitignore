@@ -47,7 +47,6 @@ build/
 out/
 .env.example
 .env.production
-vercel.json
 scripts/deploy.sh
 
 .vercel

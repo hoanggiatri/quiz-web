@@ -362,27 +362,20 @@ class AuthService {
 
   /**
    * Đăng xuất
+   * Chỉ xóa tokens local, không cần gọi API logout
    */
   async logout(): Promise<void> {
     try {
-      const accessToken = tokenService.getAccessToken();
-
-      if (accessToken) {
-        // Gọi API logout để invalidate token trên server
-        await fetch(`${this.API_BASE_URL}/auth/logout`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        });
-      }
-    } catch {
-      toast.error("Đã có lỗi xảy ra khi đăng xuất");
-      // Vẫn tiếp tục xóa tokens local dù API fail
-    } finally {
-      // Luôn xóa tokens local
+      // Xóa tất cả tokens và dữ liệu local
       tokenService.clearAll();
+
+      // Có thể thêm logic khác nếu cần (ví dụ: clear cache, analytics, etc.)
+      console.log("User logged out successfully");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Vẫn xóa tokens dù có lỗi
+      tokenService.clearAll();
+      throw error;
     }
   }
 
