@@ -70,8 +70,8 @@ class TokenService implements TokenStorage {
       // Lưu thời gian hết hạn
       const expiryTime = Date.now() + tokens.expiresIn * 1000;
       localStorage.setItem(this.TOKEN_EXPIRY_KEY, expiryTime.toString());
-    } catch (error) {
-      console.error("❌ Failed to save tokens:", error);
+    } catch {
+      // Silent fail for token storage
     }
   }
 
@@ -99,8 +99,7 @@ class TokenService implements TokenStorage {
         expiresIn,
         tokenType: "Bearer",
       };
-    } catch (error) {
-      console.error("❌ Failed to get tokens:", error);
+    } catch {
       return null;
     }
   }
@@ -152,8 +151,8 @@ class TokenService implements TokenStorage {
       sessionStorage.removeItem(this.ACCESS_TOKEN_KEY);
       localStorage.removeItem(this.REFRESH_TOKEN_KEY);
       localStorage.removeItem(this.TOKEN_EXPIRY_KEY);
-    } catch (error) {
-      console.error("❌ Failed to remove tokens:", error);
+    } catch {
+      // Silent fail for token removal
     }
   }
 
@@ -166,8 +165,8 @@ class TokenService implements TokenStorage {
 
       const expiryTime = Date.now() + expiresIn * 1000;
       localStorage.setItem(this.TOKEN_EXPIRY_KEY, expiryTime.toString());
-    } catch (error) {
-      console.error("❌ Failed to update access token:", error);
+    } catch {
+      // Silent fail for token update
     }
   }
 

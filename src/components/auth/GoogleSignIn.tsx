@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -39,28 +39,23 @@ declare global {
   }
 }
 
-export default function GoogleSignIn({ 
-  onSuccess, 
-  onError, 
+export default function GoogleSignIn({
+  onSuccess,
+  onError,
   disabled = false,
   className = ""
 }: GoogleSignInProps) {
-  const googleButtonRef = useRef<HTMLDivElement>(null);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const isGoogleAuthEnabled = import.meta.env.VITE_ENABLE_GOOGLE_AUTH === 'true';
 
   const handleCredentialResponse = useCallback((response: { credential?: string }) => {
-    console.log('Google credential response received:', response);
     try {
       if (response.credential) {
-        console.log('Google Sign-In successful, ID Token length:', response.credential.length);
-        console.log('ID Token preview:', response.credential.substring(0, 50) + '...');
         onSuccess(response.credential);
       } else {
-        console.error('No credential in response');
         throw new Error('Không nhận được thông tin đăng nhập từ Google');
       }
     } catch (error) {
-      console.error('Google Sign-In error:', error);
       toast.error('Đăng nhập Google thất bại');
       if (onError) {
         onError(error instanceof Error ? error : new Error('Unknown error'));
@@ -78,11 +73,9 @@ export default function GoogleSignIn({
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
-    
+
     script.onload = () => {
-      console.log('Google Script loaded successfully');
       if (window.google) {
-        console.log('Google object available:', window.google);
         try {
           // Initialize Google Sign-In
           window.google.accounts.id.initialize({
@@ -92,32 +85,14 @@ export default function GoogleSignIn({
             cancel_on_tap_outside: true,
             use_fedcm_for_prompt: false,
           });
-          console.log('Google Sign-In initialized successfully');
 
           // Disable auto-select to ensure account picker shows
           window.google.accounts.id.disableAutoSelect();
-          console.log('Auto-select disabled');
-
-          // Render the sign-in button
-          if (googleButtonRef.current) {
-            window.google.accounts.id.renderButton(
-              googleButtonRef.current,
-              {
-                theme: 'outline',
-                size: 'large',
-                width: 320,
-                text: 'signin_with',
-                shape: 'rectangular',
-                logo_alignment: 'left'
-              }
-            );
-            console.log('Google button rendered');
-          }
-        } catch (error) {
-          console.error('Error initializing Google Sign-In:', error);
+        } catch {
+          toast.error('Không thể khởi tạo Google Sign-In');
         }
       } else {
-        console.error('Google object not available after script load');
+        toast.error('Không thể tải Google Sign-In');
       }
     };
 
@@ -138,19 +113,10 @@ export default function GoogleSignIn({
 
 
   const handleManualSignIn = () => {
-    console.log('Google Sign-In button clicked');
-    console.log('Client ID:', clientId);
-    console.log('Current hostname:', window.location.hostname);
-    console.log('Window.google available:', !!window.google);
-    console.log('Window.google.accounts available:', !!(window.google && window.google.accounts));
-
     if (window.google && window.google.accounts) {
       try {
-        console.log('Attempting to show Google Sign-In prompt...');
-
         // Disable auto-select to force account chooser
         window.google.accounts.id.disableAutoSelect();
-        console.log('Auto-select disabled');
 
         // Re-initialize with prompt settings to force account selection
         window.google.accounts.id.initialize({
@@ -160,30 +126,25 @@ export default function GoogleSignIn({
           cancel_on_tap_outside: true,
           use_fedcm_for_prompt: false,
         });
-        console.log('Google Sign-In re-initialized');
 
         // Show the prompt with account selection
         window.google.accounts.id.prompt();
-        console.log('Google prompt called');
-
-      } catch (error) {
-        console.error('Error in handleManualSignIn:', error);
+      } catch {
         toast.error('Không thể hiển thị danh sách tài khoản Google');
       }
     } else {
-      console.error('Google Sign-In not ready');
       toast.error('Google Sign-In chưa sẵn sàng');
     }
   };
 
-  if (!clientId) {
+  if (!clientId || !isGoogleAuthEnabled) {
     return (
-      <Button 
-        variant="outline" 
-        disabled 
+      <Button
+        variant="outline"
+        disabled
         className={`w-full ${className}`}
       >
-        Không thể đăng nhập bằng Google
+        {!isGoogleAuthEnabled ? 'Google Sign-In not available' : 'Không thể đăng nhập bằng Google'}
       </Button>
     );
   }
@@ -219,11 +180,7 @@ export default function GoogleSignIn({
 Chọn tài khoản Google
       </Button>
 
-      {/* Hidden Google's rendered button for functionality */}
-      <div
-        ref={googleButtonRef}
-        className="hidden"
-      />
+
     </div>
   );
 }

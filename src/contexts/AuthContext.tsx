@@ -63,22 +63,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
               setUser(userData);
 
-              // Debug token info in development (chỉ lần đầu)
-              if (process.env.NODE_ENV === 'development') {
-                console.log('🔐 User authenticated from token:', {
-                  id: userData.id,
-                  email: userData.email,
-                  role: userData.role
-                });
-                jwtService.debugToken(accessToken);
-              }
+
             } else {
               // If can't get user from token, try API
               try {
                 const userData = await authService.getCurrentUser();
                 setUser(userData);
-              } catch (error) {
-                console.error('Failed to get current user from API:', error);
+              } catch {
                 toast.error('Đã có lỗi xảy ra khi tải thông tin người dùng');
                 tokenService.removeTokens();
                 setUser(null);
@@ -92,8 +83,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           // No valid tokens, user is not authenticated
           setUser(null);
         }
-      } catch (error) {
-        console.error('Auth initialization failed:', error);
+      } catch {
         toast.error('Đã có lỗi xảy ra khi khởi tạo xác thực');
         setUser(null);
       } finally {
@@ -185,7 +175,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         throw new Error(response.message || 'Đăng nhập Google thất bại');
       }
     } catch (error) {
-      console.error('Google login failed:', error);
       toast.error('Đã có lỗi xảy ra khi đăng nhập Google');
       throw error;
     } finally {

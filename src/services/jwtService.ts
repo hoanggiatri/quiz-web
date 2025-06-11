@@ -68,16 +68,6 @@ class JWTService {
       // Parse JSON
       const parsedPayload: JWTPayload = JSON.parse(decodedPayload);
 
-      // Chỉ log khi không silent và trong development
-      if (!silent && process.env.NODE_ENV === "development") {
-        console.log("✅ JWT decoded successfully:", {
-          sub: parsedPayload.sub,
-          username: parsedPayload.username,
-          email: parsedPayload.email,
-          exp: parsedPayload.exp ? new Date(parsedPayload.exp * 1000) : null,
-        });
-      }
-
       return parsedPayload;
     } catch {
       if (!silent) toast.error("❌ Failed to decode JWT");
