@@ -2,18 +2,6 @@
   "framework": "vite",
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist",
-  "routes": [
-    {
-      "src": "/assets/(.*)",
-      "headers": {
-        "Cache-Control": "max-age=31536000, immutable"
-      }
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/index.html"
-    }
-  ],
   "rewrites": [
     {
       "source": "/(.*)",
