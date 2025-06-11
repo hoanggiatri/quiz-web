@@ -25,18 +25,13 @@ export interface RegisterResponse {
   message: string;
 }
 
-// Types for new login API moved to types/auth.ts
-
 /**
  * Authentication Service
  * Xử lý tất cả các phương thức đăng nhập
  */
 
 class AuthService {
-  private readonly API_BASE_URL =
-    import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-  private readonly AUTH_API_URL =
-    import.meta.env.VITE_AUTH_URL || "https://api.learnsql.store/api/auth/auth";
+  private readonly AUTH_API_URL = import.meta.env.VITE_AUTH_URL;
 
   /**
    * Decode Google ID Token để lấy thông tin user
@@ -176,14 +171,14 @@ class AuthService {
       // Decode ID token để lấy thông tin user
       const googleUser = this.decodeGoogleIdToken(idToken);
 
-      const response = await fetch(`${this.API_BASE_URL}/google`, {
+      const response = await fetch(`${this.AUTH_API_URL}/google`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           idToken,
-          serviceTypes: ["QUIZ", "CLASSROOM"], // Hardcoded theo yêu cầu
+          serviceTypes: ["QUIZ"],
         }),
       });
 
@@ -218,7 +213,7 @@ class AuthService {
           tokens: {
             accessToken: data.accessToken,
             refreshToken: data.refreshToken,
-            expiresIn: 3600, // Default 1 hour, có thể điều chỉnh
+            expiresIn: 3600,
             tokenType: "Bearer",
           },
         };
@@ -327,7 +322,7 @@ class AuthService {
         throw new Error("Không có refresh token");
       }
 
-      const response = await fetch(`${this.API_BASE_URL}/auth/refresh`, {
+      const response = await fetch(`${this.AUTH_API_URL}/auth/refresh`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -368,11 +363,7 @@ class AuthService {
     try {
       // Xóa tất cả tokens và dữ liệu local
       tokenService.clearAll();
-
-      // Có thể thêm logic khác nếu cần (ví dụ: clear cache, analytics, etc.)
-      console.log("User logged out successfully");
     } catch (error) {
-      console.error("Error during logout:", error);
       // Vẫn xóa tokens dù có lỗi
       tokenService.clearAll();
       throw error;
@@ -397,7 +388,7 @@ class AuthService {
         throw new Error("Không có access token");
       }
 
-      const response = await fetch(`${this.API_BASE_URL}/auth/me`, {
+      const response = await fetch(`${this.AUTH_API_URL}/auth/me`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -514,18 +505,6 @@ class AuthService {
    */
   formatDateForAPI(date: Date): string {
     return date.toISOString().split("T")[0];
-  }
-
-  /**
-   * Get available service types
-   */
-  getAvailableServiceTypes(): { value: string; label: string }[] {
-    return [
-      { value: "QUIZ", label: "Hệ thống Quiz" },
-      { value: "CLASSROOM", label: "Lớp học trực tuyến" },
-      { value: "ASSIGNMENT", label: "Quản lý bài tập" },
-      { value: "EXAM", label: "Thi trực tuyến" },
-    ];
   }
 
   /**
