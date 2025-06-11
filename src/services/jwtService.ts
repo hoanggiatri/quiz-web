@@ -2,6 +2,8 @@
  * JWT Service - Decode và lấy thông tin từ JWT token
  */
 
+import { toast } from "sonner";
+
 export interface JWTPayload {
   // Standard JWT claims
   iss?: string; // Issuer
@@ -28,7 +30,7 @@ export interface JWTPayload {
   email_verified?: boolean;
 
   // Các claims khác
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class JWTService {
@@ -39,14 +41,14 @@ class JWTService {
   decodeToken(token: string, silent: boolean = false): JWTPayload | null {
     try {
       if (!token) {
-        if (!silent) console.warn("⚠️ Token is empty");
+        if (!silent) toast.warning("⚠️ Token is empty");
         return null;
       }
 
       // JWT có format: header.payload.signature
       const parts = token.split(".");
       if (parts.length !== 3) {
-        if (!silent) console.warn("⚠️ Invalid JWT format");
+        if (!silent) toast.warning("⚠️ Invalid JWT format");
         return null;
       }
 
@@ -77,8 +79,8 @@ class JWTService {
       }
 
       return parsedPayload;
-    } catch (error) {
-      if (!silent) console.error("❌ Failed to decode JWT:", error);
+    } catch {
+      if (!silent) toast.error("❌ Failed to decode JWT");
       return null;
     }
   }
@@ -98,8 +100,8 @@ class JWTService {
       const currentTime = Date.now();
 
       return currentTime >= expirationTime;
-    } catch (error) {
-      if (!silent) console.error("❌ Error checking token expiration:", error);
+    } catch {
+      if (!silent) toast.error("❌ Error checking token expiration");
       return true;
     }
   }
@@ -118,9 +120,8 @@ class JWTService {
       const currentTime = Date.now();
 
       return Math.max(0, Math.floor((expirationTime - currentTime) / 1000));
-    } catch (error) {
-      if (!silent)
-        console.error("❌ Error getting token time remaining:", error);
+    } catch {
+      if (!silent) toast.error("❌ Error getting token time remaining");
       return 0;
     }
   }
@@ -165,9 +166,8 @@ class JWTService {
       };
 
       return userInfo;
-    } catch (error) {
-      if (!silent)
-        console.error("❌ Error extracting user info from token:", error);
+    } catch {
+      if (!silent) toast.error("❌ Error extracting user info from token");
       return null;
     }
   }
@@ -186,8 +186,8 @@ class JWTService {
         Array.isArray(payload.permissions) &&
         payload.permissions.includes(permission)
       );
-    } catch (error) {
-      console.error("❌ Error checking permission:", error);
+    } catch {
+      toast.error("❌ Error checking permission");
       return false;
     }
   }
@@ -203,8 +203,8 @@ class JWTService {
       }
 
       return payload.role === role;
-    } catch (error) {
-      console.error("❌ Error checking role:", error);
+    } catch {
+      toast.error("❌ Error checking role");
       return false;
     }
   }
@@ -235,8 +235,8 @@ class JWTService {
         minute: "2-digit",
         second: "2-digit",
       });
-    } catch (error) {
-      console.error("❌ Error formatting token expiry:", error);
+    } catch {
+      toast.error("❌ Error formatting token expiry");
       return "Lỗi";
     }
   }
@@ -254,8 +254,8 @@ class JWTService {
       if (!payload) {
         return;
       }
-    } catch (error) {
-      console.error("❌ Error debugging token:", error);
+    } catch {
+      toast.error("❌ Error debugging token");
     }
   }
 }

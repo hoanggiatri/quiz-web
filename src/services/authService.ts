@@ -51,7 +51,7 @@ class AuthService {
       // Google ID Token có format: header.payload.signature
       const parts = idToken.split(".");
       if (parts.length !== 3) {
-        throw new Error("Invalid ID token format");
+        throw new Error("Invalid Google ID Token format");
       }
 
       // Decode payload (base64url)
@@ -64,8 +64,8 @@ class AuthService {
       );
 
       return JSON.parse(decodedPayload);
-    } catch (error) {
-      console.error("❌ Failed to decode Google ID token:", error);
+    } catch {
+      toast.error("Đã có lỗi xảy ra khi đăng nhập Google");
       return {};
     }
   }
@@ -89,9 +89,9 @@ class AuthService {
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
-          console.error("❌ Registration error data:", errorData);
-        } catch (parseError) {
-          console.error("❌ Failed to parse error response:", parseError);
+          toast.error(errorMessage);
+        } catch {
+          toast.error("Đã có lỗi xảy ra khi đăng ký");
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
         throw new Error(errorMessage);
@@ -101,7 +101,6 @@ class AuthService {
 
       return data;
     } catch (error) {
-      console.error("❌ Registration failed:", error);
       toast.error("Đã có lỗi xảy ra khi đăng ký");
 
       // Handle network errors
@@ -134,9 +133,9 @@ class AuthService {
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
-          console.error("❌ Login error data:", errorData);
-        } catch (parseError) {
-          console.error("❌ Failed to parse error response:", parseError);
+          toast.error(errorMessage);
+        } catch {
+          toast.error("Đã có lỗi xảy ra khi đăng nhập");
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
         throw new Error(errorMessage);
@@ -156,7 +155,6 @@ class AuthService {
 
       return data;
     } catch (error) {
-      console.error("❌ Login failed:", error);
       toast.error("Đã có lỗi xảy ra khi đăng nhập");
 
       // Handle network errors
@@ -194,9 +192,9 @@ class AuthService {
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
-          console.error("❌ Google login error data:", errorData);
-        } catch (parseError) {
-          console.error("❌ Failed to parse error response:", parseError);
+          toast.error(errorMessage);
+        } catch {
+          toast.error("Đã có lỗi xảy ra khi đăng nhập Google");
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
         throw new Error(errorMessage);
@@ -233,8 +231,6 @@ class AuthService {
         throw new Error("Đăng nhập Google thất bại - Response không hợp lệ");
       }
     } catch (error) {
-      console.error("❌ Google login failed:", error);
-
       // Handle network errors
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -268,9 +264,9 @@ class AuthService {
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorData.error || errorMessage;
-          console.error("❌ PTIT login error data:", errorData);
-        } catch (parseError) {
-          console.error("❌ Failed to parse error response:", parseError);
+          toast.error(errorMessage);
+        } catch {
+          toast.error("Đã có lỗi xảy ra khi đăng nhập QLDT PTIT");
           errorMessage = `HTTP ${response.status}: ${response.statusText}`;
         }
         throw new Error(errorMessage);
@@ -309,8 +305,6 @@ class AuthService {
         );
       }
     } catch (error) {
-      console.error("❌ PTIT login failed:", error);
-
       // Handle network errors
       if (error instanceof TypeError && error.message.includes("fetch")) {
         throw new Error(
@@ -360,7 +354,6 @@ class AuthService {
 
       return data;
     } catch (error) {
-      console.error("❌ Token refresh failed:", error);
       // Nếu refresh thất bại, xóa tất cả tokens
       tokenService.removeTokens();
       throw error;
@@ -384,8 +377,8 @@ class AuthService {
           },
         });
       }
-    } catch (error) {
-      console.error("❌ Logout API failed:", error);
+    } catch {
+      toast.error("Đã có lỗi xảy ra khi đăng xuất");
       // Vẫn tiếp tục xóa tokens local dù API fail
     } finally {
       // Luôn xóa tokens local
@@ -426,7 +419,7 @@ class AuthService {
 
       return await response.json();
     } catch (error) {
-      console.error("❌ Get current user failed:", error);
+      toast.error("Lấy thông tin user thất bại");
       throw error;
     }
   }
@@ -446,8 +439,8 @@ class AuthService {
     if (tokenService.isTokenExpiringSoon() && !tokenService.isTokenExpired()) {
       try {
         await this.refreshToken();
-      } catch (error) {
-        console.error("❌ Auto refresh failed:", error);
+      } catch {
+        toast.error("Làm mới token thất bại");
       }
     }
   }

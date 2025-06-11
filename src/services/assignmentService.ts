@@ -1,9 +1,19 @@
 import axios from "axios";
+import { tokenService } from "./tokenService";
 
 const API_BASE_URL =
   import.meta.env.VITE_QUIZ_BASE_URL ||
   import.meta.env.VITE_API_BASE_URL ||
   "http://localhost:8080";
+
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = tokenService.getAccessToken();
+  return {
+    Accept: "*/*",
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
 
 export interface Assignment {
   assignmentId: string;
@@ -56,7 +66,7 @@ export const assignmentService = {
     const response = await axios.get(
       `${API_BASE_URL}/assignment/get-by-class/${classId}`,
       {
-        headers: { Accept: "*/*" },
+        headers: getAuthHeaders(),
       }
     );
     return response.data;
@@ -64,14 +74,16 @@ export const assignmentService = {
   getAssignmentById: async (id: string): Promise<AssignmentDetailResponse> => {
     const response = await axios.get(
       `${API_BASE_URL}/assignment/get-by-id/${id}`,
-      { headers: { Accept: "*/*" } }
+      { headers: getAuthHeaders() }
     );
     return response.data;
   },
+
   submitAssignment: async (assignmentId: string, file: File): Promise<any> => {
     const formData = new FormData();
     formData.append("file", file);
 
+    const token = tokenService.getAccessToken();
     const response = await axios.post(
       `${API_BASE_URL}/assignment/add-file`,
       formData,
@@ -80,6 +92,7 @@ export const assignmentService = {
         headers: {
           "Content-Type": "multipart/form-data",
           Accept: "*/*",
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
       }
     );

@@ -8,11 +8,19 @@ import type {
   FinishSubmissionResponse,
 } from "@/types/quiz";
 import { toast } from "sonner";
+import { tokenService } from "./tokenService";
 
-const API_BASE_URL =
-  import.meta.env.VITE_QUIZ_BASE_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_QUIZ_BASE_URL;
+
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+  const token = tokenService.getAccessToken();
+  return {
+    Accept: "*/*",
+    "Content-Type": "application/json",
+    ...(token && { Authorization: `Bearer ${token}` }),
+  };
+};
 
 export interface PublicQuiz {
   examQuizzesId: string;
@@ -70,12 +78,25 @@ export interface AnswerResponse {
 }
 
 export const quizService = {
+  getExamQuizzesByClassId: async (classId: string): Promise<QuizResponse> => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/exam-quizz/get-exam-quizzes-in-class?classId=${classId}`,
+        {
+          headers: getAuthHeaders(),
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching exam quizzes by class id:", error);
+      throw error;
+    }
+  },
+
   getAllPublicQuizzes: async (): Promise<QuizResponse> => {
     try {
       const response = await axios.get(`${API_BASE_URL}/get-all-exam-quizzes`, {
-        headers: {
-          Accept: "*/*",
-        },
+        headers: getAuthHeaders(),
       });
       return response.data;
     } catch (error) {
@@ -89,12 +110,9 @@ export const quizService = {
   ): Promise<QuizDetailResponse> => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/get-all-question-in-exam-quizzes/${examQuizzesId}`,
+        `${API_BASE_URL}/exam-quizz/get-all-question-in-exam-quizzes?examQuizzesId=${examQuizzesId}`,
         {
-          params: { examQuizzesId },
-          headers: {
-            Accept: "*/*",
-          },
+          headers: getAuthHeaders(),
         }
       );
       return response.data;
@@ -110,9 +128,7 @@ export const quizService = {
         `${API_BASE_URL}/teacher/get-all-answer-by-questionId/${questionId}`,
         {
           params: { questionId },
-          headers: {
-            Accept: "*/*",
-          },
+          headers: getAuthHeaders(),
         }
       );
       return response.data;
@@ -129,11 +145,9 @@ export const quizService = {
   ): Promise<ExamUserQuizzesResponse> => {
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/exam-user-quizzes/get-exam-user-quizzes/${userId}/${examQuizzesId}`,
+        `${API_BASE_URL}/exam-user-quizzes/get-exam-user-quizzes?userId=${userId}&examQuizzesId=${examQuizzesId}`,
         {
-          headers: {
-            Accept: "*/*",
-          },
+          headers: getAuthHeaders(),
         }
       );
       return response.data;
@@ -150,13 +164,10 @@ export const quizService = {
   ): Promise<CreateSubmissionResponse> => {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/submit-answer/create-submission/${userId}/${examQuizzesId}`,
+        `${API_BASE_URL}/submit-answer/create-submission?userId=${userId}&examQuizzesId=${examQuizzesId}`,
         {},
         {
-          headers: {
-            Accept: "*/*",
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeaders(),
         }
       );
       return response.data;
@@ -176,10 +187,7 @@ export const quizService = {
         `${API_BASE_URL}/submit-answer/submit`,
         submitData,
         {
-          headers: {
-            Accept: "*/*",
-            "Content-Type": "application/json",
-          },
+          headers: getAuthHeaders(),
         }
       );
       return response.data;
@@ -195,12 +203,10 @@ export const quizService = {
   ): Promise<FinishSubmissionResponse> => {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/submit-answer/finish/${submissionId}`,
+        `${API_BASE_URL}/submit-answer/finish?submissionId=${submissionId}`,
         {},
         {
-          headers: {
-            Accept: "*/*",
-          },
+          headers: getAuthHeaders(),
         }
       );
       return response.data;

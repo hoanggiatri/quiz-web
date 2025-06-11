@@ -15,7 +15,8 @@ import UserProfilePage from '@/pages/user-profile';
 import AssignmentListPage from '@/pages/assignment/assignment-list';
 import AssignmentDetailPage from '@/pages/assignment/assignment-detail';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
-import { UserProvider } from '@/contexts/UserContext';
+import { UserProvider, useUserContext } from '@/contexts/UserContext';
+import { ClassProvider } from '@/contexts/ClassContext';
 import { Toaster } from '@/components/ui/sonner';
 import './App.css';
 import { ThemeProvider } from './components/theme-provider';
@@ -23,6 +24,7 @@ import { ThemeProvider } from './components/theme-provider';
 // Component chính với AuthProvider
 function AppContent() {
   const { isAuthenticated, logout } = useAuth();
+  const { userId } = useUserContext();
 
   // Route bảo vệ - chỉ cho phép truy cập khi đã đăng nhập
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -71,15 +73,17 @@ function AppContent() {
         />
           
           {/* Trang danh sách bài thi */}
-          <Route 
+          <Route
             path="/quiz/quiz-list"
             element={
               <ProtectedRoute>
-                <MainLayout onLogout={logout}>
-                  <QuizListPage />
-                </MainLayout>
+                <ClassProvider userId={userId}>
+                  <MainLayout onLogout={logout}>
+                    <QuizListPage />
+                  </MainLayout>
+                </ClassProvider>
               </ProtectedRoute>
-            } 
+            }
           />
           
           {/* Trang chi tiết bài thi */}

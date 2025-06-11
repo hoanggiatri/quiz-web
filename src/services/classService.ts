@@ -77,11 +77,14 @@ class ClassService {
 
   private getAuthHeaders() {
     const token = tokenService.getAccessToken();
-    return {
+
+    const headers = {
       "Content-Type": "application/json",
       Accept: "*/*",
       ...(token && { Authorization: `Bearer ${token}` }),
     };
+
+    return headers;
   }
 
   /**
@@ -129,16 +132,16 @@ class ClassService {
 
   /**
    * Get classes by user ID
-   * GET /classes/user/{userId}
+   * GET /classes/get-all-by-user-id?userId={userId}
    */
   async getClassesByUser(userId: string): Promise<ClassListResponse> {
     try {
-      const baseUrl = this.getApiBaseUrl();
-      const fullUrl = `${baseUrl}/classes/user/${userId}`;
-
-      const response = await axios.get(fullUrl, {
-        headers: this.getAuthHeaders(),
-      });
+      const response = await axios.get(
+        `${this.getApiBaseUrl()}/classes/get-all-by-user-id?userId=${userId}`,
+        {
+          headers: this.getAuthHeaders(),
+        }
+      );
 
       return response.data;
     } catch (error) {

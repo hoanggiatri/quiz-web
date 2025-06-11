@@ -27,13 +27,14 @@ import {
 import { quizService, type PublicQuiz } from "@/services/quizService";
 import "@/styles/quiz-shared.css";
 import "./style.css";
+import { useUserContext } from "@/contexts/UserContext";
 
 // Demo quiz data for better showcase
 
 export default function QuizDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const userId = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
+  const userId = useUserContext().userId;
 
   const [quiz, setQuiz] = useState<PublicQuiz | null>(null);
   const [loading, setLoading] = useState(true);
@@ -104,7 +105,7 @@ export default function QuizDetailPage() {
       setStartingQuiz(true);
 
       const examUserQuizzesResponse = await quizService.getExamUserQuizzes(
-        '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+        userId,
         id!
       );
 
@@ -113,7 +114,7 @@ export default function QuizDetailPage() {
       }
 
       const submissionResponse = await quizService.createSubmission(
-        '3fa85f64-5717-4562-b3fc-2c963f66afa6',
+        userId,
         id!
       );
 

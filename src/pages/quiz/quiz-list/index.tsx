@@ -21,11 +21,14 @@ import {
   ChevronLeft,
   ChevronRight} from "lucide-react";
 import { quizService, type PublicQuiz } from "@/services/quizService";
+import { useClassContext } from "@/contexts/ClassContext";
+import ClassSelector from "@/components/common/ClassSelector";
 import "@/styles/quiz-shared.css";
 import "./style.css";
 
 
 export default function QuizListPage() {
+  const { selectedClass, loading: classLoading } = useClassContext();
   const [quizzes, setQuizzes] = useState<PublicQuiz[]>([]);
   const [filteredQuizzes, setFilteredQuizzes] = useState<PublicQuiz[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,14 +90,20 @@ export default function QuizListPage() {
     }));
   };
 
-  // Load quizzes from API
+  // Load quizzes from API based on selected class
   useEffect(() => {
     const loadQuizzes = async () => {
+      if (!selectedClass) {
+        setQuizzes([]);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
 
-        const response = await quizService.getAllPublicQuizzes();
+        const response = await quizService.getExamQuizzesByClassId(selectedClass.id);
         if (response.status === 200 && response.data) {
           setQuizzes(response.data);
         } else {
@@ -108,8 +117,10 @@ export default function QuizListPage() {
       }
     };
 
-    loadQuizzes();
-  }, []);
+    if (!classLoading) {
+      loadQuizzes();
+    }
+  }, [selectedClass, classLoading]);
 
   // Filter and sort quizzes
   useEffect(() => {
@@ -195,6 +206,7 @@ export default function QuizListPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          <ClassSelector />
           <Link to="/quiz/quiz-taking-demo">
             <Button variant="outline" size="sm" className="bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100">
               <Play className="w-4 h-4 mr-2" />
@@ -341,9 +353,16 @@ export default function QuizListPage() {
         /* Empty State */
         <div className="flex flex-col items-center justify-center min-h-[400px]">
           <BookOpen className="w-16 h-16 text-muted-foreground mb-4" />
-          <h2 className="text-2xl font-semibold mb-2">Không tìm thấy bài thi</h2>
+          <h2 className="text-2xl font-semibold mb-2">
+            {!selectedClass ? 'Chọn lớp học để xem bài thi' : 'Không tìm thấy bài thi'}
+          </h2>
           <p className="text-muted-foreground">
-            {searchParams.query ? 'Không có bài thi nào phù hợp với từ khóa tìm kiếm.' : 'Hiện tại chưa có bài thi nào được công bố.'}
+            {!selectedClass
+              ? 'Vui lòng chọn một lớp học từ dropdown ở trên để xem danh sách bài thi.'
+              : searchParams.query
+                ? 'Không có bài thi nào phù hợp với từ khóa tìm kiếm.'
+                : 'Hiện tại chưa có bài thi nào trong lớp học này.'
+            }
           </p>
         </div>
       ) : (
