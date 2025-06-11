@@ -176,7 +176,7 @@ class AuthService {
       // Decode ID token để lấy thông tin user
       const googleUser = this.decodeGoogleIdToken(idToken);
 
-      const response = await fetch(`${this.AUTH_API_URL}/google`, {
+      const response = await fetch(`${this.API_BASE_URL}/google`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

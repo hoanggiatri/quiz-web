@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import QLDTLoginModal from "@/components/auth/QLDTLoginModal";
-import GoogleLoginButton from "@/components/auth/GoogleLoginButton";
+import GoogleSignIn from "@/components/auth/GoogleSignIn";
 import type { QLDTCredentials, LoginRequest } from "@/types/auth";
 import "./styles.css";
 
@@ -133,11 +133,10 @@ export default function LoginPage({ onLoginSuccess }: LoginPageProps) {
 
               {/* Social Login Buttons */}
               <div className="space-y-3 mb-6">
-                <GoogleLoginButton
+                <GoogleSignIn
                   onSuccess={handleGoogleLogin}
                   onError={handleGoogleError}
                   disabled={isLoading}
-                  loading={isLoading}
                 />
 
                 <Button

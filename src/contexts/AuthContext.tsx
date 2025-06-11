@@ -267,6 +267,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, []);
 
+
+
   /**
    * Refresh token
    */
