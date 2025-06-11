@@ -35,15 +35,25 @@ class AuthService {
 
   /**
    * Decode Google ID Token để lấy thông tin user
+   * Supports both real JWT tokens and mock base64 encoded user info
    */
   private decodeGoogleIdToken(idToken: string): {
     email?: string;
     name?: string;
     picture?: string;
     sub?: string;
+    given_name?: string;
+    family_name?: string;
   } {
     try {
-      // Google ID Token có format: header.payload.signature
+      // Check if it's a mock credential (base64 encoded JSON from OAuth2 flow)
+      if (!idToken.includes(".")) {
+        // Mock credential from OAuth2 flow
+        const decodedPayload = atob(idToken);
+        return JSON.parse(decodedPayload);
+      }
+
+      // Real JWT token
       const parts = idToken.split(".");
       if (parts.length !== 3) {
         throw new Error("Invalid Google ID Token format");
