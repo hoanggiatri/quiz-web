@@ -126,7 +126,7 @@ export const mockAutoSaveService = {
           lastUpdated: new Date(change.timestamp).toISOString(),
         };
         return acc;
-      }, {} as Record<string, any>),
+      }, {} as Record<string, { selectedAnswers: string[]; isFlagged: boolean; lastUpdated: string }>),
       session: {
         ...data.sessionData,
         lastActivity: new Date().toISOString(),

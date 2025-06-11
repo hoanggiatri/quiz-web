@@ -23,7 +23,7 @@ import { jwtService } from "@/services/jwtService";
 
 export default function UserProfilePage() {
   const { user, isAuthenticated } = useAuth();
-  const [tokenInfo, setTokenInfo] = useState<any>(null);
+  const [tokenInfo, setTokenInfo] = useState<Record<string, unknown> | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [isEditing, setIsEditing] = useState(false);
 

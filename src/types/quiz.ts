@@ -116,7 +116,7 @@ export interface SubmitSingleAnswerRequest {
 export interface SubmitSingleAnswerResponse {
   status: number;
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
   timestamp: string;
 }
 

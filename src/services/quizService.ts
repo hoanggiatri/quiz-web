@@ -218,7 +218,13 @@ export const quizService = {
   },
 
   // API để submit answers (deprecated - sử dụng finishSubmission thay thế)
-  submitAnswers: async (submitData: SubmitAnswerRequest): Promise<any> => {
+  submitAnswers: async (
+    submitData: SubmitAnswerRequest
+  ): Promise<{
+    status: number;
+    message: string;
+    data: { submissionId: string; totalAnswers: number; submittedAt: string };
+  }> => {
     try {
       // Mock response for now
       return {

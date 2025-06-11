@@ -79,7 +79,10 @@ export const assignmentService = {
     return response.data;
   },
 
-  submitAssignment: async (assignmentId: string, file: File): Promise<any> => {
+  submitAssignment: async (
+    assignmentId: string,
+    file: File
+  ): Promise<{ status: number; message: string; data?: unknown }> => {
     const formData = new FormData();
     formData.append("file", file);
 

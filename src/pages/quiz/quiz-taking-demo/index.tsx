@@ -92,7 +92,7 @@ const DEMO_QUIZ_DATA = {
 
 // Generate more questions to reach 50 (for testing sidebar with many questions)
 for (let i = 6; i <= 50; i++) {
-  const questionTypes = ["singleChoice", "multipleChoice"];
+  const questionTypes = ["singleChoice", "multipleChoice"] as const;
   const questionType = questionTypes[Math.floor(Math.random() * questionTypes.length)];
 
   // Create more varied question content
