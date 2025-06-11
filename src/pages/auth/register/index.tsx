@@ -606,7 +606,7 @@ export default function RegisterPage({ onRegisterSuccess }: RegisterPageProps) {
               <p className="text-xs text-gray-600 dark:text-gray-400">
                 Đã có tài khoản?{" "}
                 <Link
-                  to="/auth/login"
+                  to="/login"
                   className="text-primary hover:underline font-medium"
                 >
                   Đăng nhập ngay
